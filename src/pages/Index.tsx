@@ -90,23 +90,39 @@ const Index = () => {
     const clean = sanitize(input);
     if (!clean || aiLoading) return;
 
-    const newMessages: { role: "user" | "assistant"; content: string }[] = [...aiMessages, { role: "user", content: clean }];
-    setAiMessages(newMessages);
+    const userMsg = { role: "user" as const, content: clean };
+    const updatedMessages = [...aiMessages, userMsg];
+    setAiMessages(updatedMessages);
     setInput("");
     setAiLoading(true);
 
-    // Mock AI response
-    setTimeout(() => {
-      setAiMessages((msgs) => [
-        ...msgs,
-        {
-          role: "assistant" as const,
-          content:
-            "I'm here to help — your ZENTRIX AI is ready. Connect your API key via backend to activate live responses.",
+    let assistantSoFar = "";
+    const upsertAssistant = (chunk: string) => {
+      assistantSoFar += chunk;
+      setAiMessages((prev) => {
+        const last = prev[prev.length - 1];
+        if (last?.role === "assistant" && prev.length > updatedMessages.length) {
+          return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantSoFar } : m));
+        }
+        return [...prev, { role: "assistant", content: assistantSoFar }];
+      });
+    };
+
+    try {
+      await streamChat({
+        messages: updatedMessages,
+        onDelta: (chunk) => upsertAssistant(chunk),
+        onDone: () => setAiLoading(false),
+        onError: (err) => {
+          toast.error(err);
+          setAiLoading(false);
         },
-      ]);
+      });
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to connect to ZENTRIX AI");
       setAiLoading(false);
-    }, 1200);
+    }
   };
 
   return (
