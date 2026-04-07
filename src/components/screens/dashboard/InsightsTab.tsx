@@ -8,28 +8,32 @@ const insightCards = [
     icon: "☀️",
     title: "Good morning — here's your edge today",
     content: "Markets are up 1.2%. 3 emails need attention. Your calendar has 2 meetings. ZENTRIX suggests: block 90 min for deep work before noon.",
-    color: "border-primary/40 bg-primary/5",
+    gradient: "from-primary/15 to-primary/5",
+    borderColor: "border-primary/20",
   },
   {
     category: "Trending",
-    icon: "📈",
+    icon: "🔥",
     title: "AI industry update",
     content: "OpenAI released new API pricing. Google announced Gemini 3. This could affect your SaaS costs — ZENTRIX recommends reviewing your AI budget.",
-    color: "border-accent/40 bg-accent/5",
+    gradient: "from-[hsl(330_90%_60%)]/15 to-[hsl(330_90%_60%)]/5",
+    borderColor: "border-[hsl(330_90%_60%)]/20",
   },
   {
     category: "Personal Growth",
-    icon: "🧠",
+    icon: "🌱",
     title: "Weekly reflection prompt",
     content: "What's one decision you made this week that moved you forward? Rate your energy 1-10. ZENTRIX tracks patterns to help you optimize.",
-    color: "border-green-500/40 bg-green-500/5",
+    gradient: "from-accent/15 to-accent/5",
+    borderColor: "border-accent/20",
   },
   {
     category: "Business Intel",
-    icon: "💼",
+    icon: "🎯",
     title: "Competitor activity detected",
     content: "2 competitors updated their pricing pages this week. ZENTRIX monitors changes so you stay ahead without manual checking.",
-    color: "border-purple-500/40 bg-purple-500/5",
+    gradient: "from-[hsl(200_90%_55%)]/15 to-[hsl(200_90%_55%)]/5",
+    borderColor: "border-[hsl(200_90%_55%)]/20",
   },
 ];
 
@@ -41,7 +45,7 @@ export default function InsightsTab() {
       <div className="flex items-center gap-3 mb-6">
         <ZentrixLogo size={20} />
         <h2 className="font-display text-xl font-bold">Intelligence Feed</h2>
-        <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full ml-auto">Updated just now</span>
+        <span className="text-[10px] text-accent bg-accent/10 border border-accent/20 px-2.5 py-0.5 rounded-full ml-auto font-medium">Live</span>
       </div>
 
       <div className="grid gap-4">
@@ -52,32 +56,32 @@ export default function InsightsTab() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.08 }}
             onClick={() => setExpanded(expanded === i ? null : i)}
-            className={`border rounded-xl p-5 cursor-pointer transition-all hover:shadow-lg ${card.color}`}
+            className={`bg-gradient-to-br ${card.gradient} border ${card.borderColor} rounded-2xl p-5 cursor-pointer transition-all hover:shadow-lg hover:shadow-primary/5`}
           >
             <div className="flex items-start gap-3">
               <span className="text-2xl">{card.icon}</span>
               <div className="flex-1 min-w-0">
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">{card.category}</span>
-                <h3 className="font-semibold text-sm mt-1">{card.title}</h3>
+                <span className="text-[10px] uppercase tracking-[3px] text-muted-foreground font-medium">{card.category}</span>
+                <h3 className="font-display font-semibold text-sm mt-1">{card.title}</h3>
                 {expanded === i && (
                   <motion.p
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
-                    className="text-sm text-muted-foreground mt-2 leading-relaxed"
+                    className="text-sm text-muted-foreground mt-3 leading-relaxed"
                   >
                     {card.content}
                   </motion.p>
                 )}
               </div>
-              <span className="text-muted-foreground text-xs">{expanded === i ? "▲" : "▼"}</span>
+              <span className="text-muted-foreground/40 text-xs">{expanded === i ? "▲" : "▼"}</span>
             </div>
           </motion.div>
         ))}
       </div>
 
-      <div className="mt-8 bg-card border border-border rounded-xl p-5 text-center">
+      <div className="mt-8 bg-gradient-to-r from-primary/5 to-accent/5 border border-glass rounded-2xl p-5 text-center">
         <p className="text-sm text-muted-foreground">
-          💡 Pro tip: Ask your AI Assistant to generate a personalized daily briefing based on your goals.
+          💡 Ask your AI Assistant to generate a personalized daily briefing based on your goals.
         </p>
       </div>
     </div>
