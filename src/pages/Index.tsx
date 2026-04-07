@@ -31,6 +31,8 @@ const Index = () => {
   const [aiMessages, setAiMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([
     { role: "assistant", content: "Hey there! I'm **ZENTRIX** — your personal intelligence layer. Think of me as your Jarvis. I'm here to help you think smarter, move faster, and stay ahead. What's on your mind?" },
   ]);
+  const [input, setInput] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null!);
 
   useEffect(() => {
