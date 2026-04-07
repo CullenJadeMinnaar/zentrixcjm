@@ -26,8 +26,8 @@ const Index = () => {
   const [authLocked, setAuthLocked] = useState(false);
   const [lockCountdown, setLockCountdown] = useState(0);
   const [payError, setPayError] = useState("");
-  const [aiMessages, setAiMessages] = useState([
-    { role: "assistant" as const, content: "Hello! I'm your ZENTRIX intelligence layer. How can I help you today?" },
+  const [aiMessages, setAiMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([
+    { role: "assistant", content: "Hello! I'm your ZENTRIX intelligence layer. How can I help you today?" },
   ]);
   const [input, setInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
