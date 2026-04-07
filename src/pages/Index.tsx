@@ -88,7 +88,7 @@ const Index = () => {
     const clean = sanitize(input);
     if (!clean || aiLoading) return;
 
-    const newMessages = [...aiMessages, { role: "user" as const, content: clean }];
+    const newMessages: { role: "user" | "assistant"; content: string }[] = [...aiMessages, { role: "user", content: clean }];
     setAiMessages(newMessages);
     setInput("");
     setAiLoading(true);
