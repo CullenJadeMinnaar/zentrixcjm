@@ -29,10 +29,8 @@ const Index = () => {
   const [lockCountdown, setLockCountdown] = useState(0);
   const [payError, setPayError] = useState("");
   const [aiMessages, setAiMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([
-    { role: "assistant", content: "Hello! I'm your ZENTRIX intelligence layer. How can I help you today?" },
+    { role: "assistant", content: "Hey there! I'm **ZENTRIX** — your personal intelligence layer. Think of me as your Jarvis. I'm here to help you think smarter, move faster, and stay ahead. What's on your mind?" },
   ]);
-  const [input, setInput] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null!);
 
   useEffect(() => {
