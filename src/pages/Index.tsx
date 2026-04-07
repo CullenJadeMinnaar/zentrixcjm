@@ -6,6 +6,8 @@ import DashboardScreen from "@/components/screens/DashboardScreen";
 import PrivacyScreen from "@/components/screens/PrivacyScreen";
 import { RateLimiter, sanitize, validateEmail, validatePassword } from "@/lib/auth-helpers";
 import { PLANS } from "@/lib/constants";
+import { streamChat } from "@/lib/chat-stream";
+import { toast } from "sonner";
 
 type Screen = "landing" | "auth" | "paywall" | "dashboard" | "privacy";
 type AuthMode = "login" | "register" | "forgot";
