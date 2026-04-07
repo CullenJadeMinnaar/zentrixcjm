@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import ZentrixLogo from "../ZentrixLogo";
-import { PLANS, type Plan, COMPANY_INFO } from "@/lib/constants";
+import { PLANS, COMPANY_INFO } from "@/lib/constants";
 
 interface PaywallScreenProps {
   userName: string;
@@ -10,86 +10,93 @@ interface PaywallScreenProps {
 
 export default function PaywallScreen({ userName, onSelect, error }: PaywallScreenProps) {
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 py-12">
+    <div className="min-h-screen flex items-center justify-center px-6 py-12 relative overflow-hidden">
+      <div className="fixed inset-0 bg-gradient-mesh pointer-events-none" />
+      
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-4xl text-center"
+        className="w-full max-w-4xl text-center relative z-10"
       >
-        <div className="flex items-center justify-center gap-3 mb-3">
-          <ZentrixLogo size={26} />
-          <span className="font-display font-extrabold text-base tracking-[3px] text-foreground">ZENTRIX</span>
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <ZentrixLogo size={30} />
+          <span className="font-display font-extrabold text-lg tracking-[4px] text-gradient-primary">ZENTRIX</span>
         </div>
 
-        <h2 className="text-3xl font-extrabold mb-2 font-display">Choose your plan</h2>
-        <p className="text-muted-foreground text-sm mb-2">
-          Welcome, {userName}. Activate your intelligence layer.
+        <h2 className="text-4xl font-extrabold mb-3 font-display">Choose your plan</h2>
+        <p className="text-muted-foreground text-base mb-2">
+          Welcome, <span className="text-foreground font-medium">{userName}</span>. Activate your intelligence layer.
         </p>
-        <p className="text-primary text-sm font-medium mb-8">
-          🎉 {COMPANY_INFO.trialDays}-day free trial on all plans — no card required
+        <p className="text-sm font-medium mb-10">
+          <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            🎉 {COMPANY_INFO.trialDays}-day free trial on all plans — no card required
+          </span>
         </p>
 
         {error && (
-          <div className="bg-destructive/10 border border-destructive/30 text-destructive rounded-lg px-4 py-3 text-sm mb-6 inline-block">
+          <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-xl px-4 py-3 text-sm mb-6 inline-block">
             {error}
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
           {PLANS.map((plan, i) => (
             <motion.div
               key={plan.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className={`relative bg-card border rounded-2xl p-7 text-left transition-all hover:scale-[1.02] ${
+              whileHover={{ y: -5, transition: { duration: 0.2 } }}
+              className={`relative bg-glass border rounded-2xl p-7 text-left transition-all ${
                 plan.popular
-                  ? "border-primary glow-primary"
-                  : "border-border hover:border-primary/30"
+                  ? "border-primary/50 glow-primary"
+                  : "border-glass hover:border-primary/20"
               }`}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[11px] px-3 py-1 rounded-full font-semibold whitespace-nowrap">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-[hsl(330_90%_60%)] text-primary-foreground text-[11px] px-4 py-1 rounded-full font-semibold whitespace-nowrap">
                   Most popular
                 </div>
               )}
               {"badge" in plan && plan.badge && !plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground text-[11px] px-3 py-1 rounded-full font-semibold whitespace-nowrap">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground text-[11px] px-4 py-1 rounded-full font-semibold whitespace-nowrap">
                   {plan.badge}
                 </div>
               )}
 
-              <div className="text-xs text-muted-foreground tracking-widest uppercase mb-2">{plan.label}</div>
+              <div className="text-xs text-muted-foreground tracking-widest uppercase mb-3 font-medium">{plan.label}</div>
               <div className="text-4xl font-extrabold mb-0.5 font-display">
                 {plan.price}
-                <span className="text-sm font-normal text-muted-foreground">{plan.period}</span>
+                <span className="text-base font-normal text-muted-foreground">{plan.period}</span>
               </div>
-              <div className="text-xs text-muted-foreground/60 mb-5">{plan.usd} USD</div>
+              <div className="text-xs text-muted-foreground/50 mb-6">{plan.usd} USD</div>
 
-              <ul className="flex flex-col gap-2.5 mb-6">
+              <ul className="flex flex-col gap-3 mb-7">
                 {plan.features.map((f) => (
-                  <li key={f} className="text-sm text-secondary-foreground/80 flex items-start gap-2">
-                    <span className="text-primary mt-0.5">✓</span>
+                  <li key={f} className="text-sm text-secondary-foreground/80 flex items-start gap-2.5">
+                    <span className="text-accent mt-0.5 text-xs">✓</span>
                     {f}
                   </li>
                 ))}
               </ul>
 
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => onSelect(plan.id)}
-                className={`w-full py-3 rounded-lg text-sm font-bold transition-all ${
+                className={`w-full py-3.5 rounded-xl text-sm font-bold transition-all ${
                   plan.popular
-                    ? "bg-primary text-primary-foreground hover:brightness-110"
-                    : "bg-transparent border border-primary text-primary hover:bg-primary/10"
+                    ? "bg-gradient-to-r from-primary to-[hsl(330_90%_60%)] text-primary-foreground hover:brightness-110 glow-primary"
+                    : "bg-transparent border border-primary/40 text-primary hover:bg-primary/10"
                 }`}
               >
-                {plan.popular ? "Start free trial" : "Choose plan"}
-              </button>
+                {plan.popular ? "Start free trial →" : "Choose plan"}
+              </motion.button>
             </motion.div>
           ))}
         </div>
 
-        <p className="text-xs text-muted-foreground/50">
+        <p className="text-xs text-muted-foreground/40">
           Secure payments via Stripe / PayFast. Cancel anytime. No hidden fees.
         </p>
       </motion.div>

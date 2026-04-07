@@ -29,7 +29,7 @@ const Index = () => {
   const [lockCountdown, setLockCountdown] = useState(0);
   const [payError, setPayError] = useState("");
   const [aiMessages, setAiMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([
-    { role: "assistant", content: "Hey there! I'm **ZENTRIX** — your personal intelligence layer. Think of me as your Jarvis. I'm here to help you think smarter, move faster, and stay ahead. What's on your mind?" },
+    { role: "assistant", content: "Hey! 👋 I'm **ZENTRIX** — think of me as your personal Jarvis. I'm part AI assistant, part life coach, part therapist, part best friend.\n\nI'm here to help you **think clearer**, **feel better**, and **move smarter**. Whether you need to vent, strategize, or just have someone to talk to — I'm always here.\n\nWhat's on your mind today?" },
   ]);
   const [input, setInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
