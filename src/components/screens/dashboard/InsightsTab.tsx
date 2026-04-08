@@ -8,32 +8,24 @@ const insightCards = [
     icon: "☀️",
     title: "Good morning — here's your edge today",
     content: "Markets are up 1.2%. 3 emails need attention. Your calendar has 2 meetings. ZENTRIX suggests: block 90 min for deep work before noon.",
-    gradient: "from-primary/15 to-primary/5",
-    borderColor: "border-primary/20",
   },
   {
     category: "Trending",
     icon: "🔥",
     title: "AI industry update",
     content: "OpenAI released new API pricing. Google announced Gemini 3. This could affect your SaaS costs — ZENTRIX recommends reviewing your AI budget.",
-    gradient: "from-[hsl(330_90%_60%)]/15 to-[hsl(330_90%_60%)]/5",
-    borderColor: "border-[hsl(330_90%_60%)]/20",
   },
   {
     category: "Personal Growth",
     icon: "🌱",
     title: "Weekly reflection prompt",
     content: "What's one decision you made this week that moved you forward? Rate your energy 1-10. ZENTRIX tracks patterns to help you optimize.",
-    gradient: "from-accent/15 to-accent/5",
-    borderColor: "border-accent/20",
   },
   {
     category: "Business Intel",
     icon: "🎯",
     title: "Competitor activity detected",
     content: "2 competitors updated their pricing pages this week. ZENTRIX monitors changes so you stay ahead without manual checking.",
-    gradient: "from-[hsl(200_90%_55%)]/15 to-[hsl(200_90%_55%)]/5",
-    borderColor: "border-[hsl(200_90%_55%)]/20",
   },
 ];
 
@@ -45,7 +37,7 @@ export default function InsightsTab() {
       <div className="flex items-center gap-3 mb-6">
         <ZentrixLogo size={20} />
         <h2 className="font-display text-xl font-bold">Intelligence Feed</h2>
-        <span className="text-[10px] text-accent bg-accent/10 border border-accent/20 px-2.5 py-0.5 rounded-full ml-auto font-medium">Live</span>
+        <span className="text-[10px] text-primary bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full ml-auto font-medium">Live</span>
       </div>
 
       <div className="grid gap-4">
@@ -56,7 +48,7 @@ export default function InsightsTab() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.08 }}
             onClick={() => setExpanded(expanded === i ? null : i)}
-            className={`bg-gradient-to-br ${card.gradient} border ${card.borderColor} rounded-2xl p-5 cursor-pointer transition-all hover:shadow-lg hover:shadow-primary/5`}
+            className="bg-card/60 border border-border rounded-xl p-5 cursor-pointer transition-all hover:border-primary/20"
           >
             <div className="flex items-start gap-3">
               <span className="text-2xl">{card.icon}</span>
@@ -79,7 +71,7 @@ export default function InsightsTab() {
         ))}
       </div>
 
-      <div className="mt-8 bg-gradient-to-r from-primary/5 to-accent/5 border border-glass rounded-2xl p-5 text-center">
+      <div className="mt-8 bg-card/40 border border-border rounded-xl p-5 text-center">
         <p className="text-sm text-muted-foreground">
           💡 Ask your AI Assistant to generate a personalized daily briefing based on your goals.
         </p>

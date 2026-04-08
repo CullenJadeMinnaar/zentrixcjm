@@ -37,7 +37,7 @@ export default function AutomationsTab() {
           <h2 className="font-display text-xl font-bold">Automations</h2>
           <p className="text-sm text-muted-foreground mt-1">Set it and forget it — ZENTRIX handles the rest</p>
         </div>
-        <span className="text-[10px] bg-primary/15 text-primary px-3 py-1.5 rounded-full font-semibold border border-primary/20">
+        <span className="text-[10px] bg-primary/10 text-primary px-3 py-1.5 rounded-full font-semibold border border-primary/20">
           {automations.filter((a) => a.enabled).length} active
         </span>
       </div>
@@ -49,10 +49,10 @@ export default function AutomationsTab() {
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.05 }}
-            className={`border rounded-2xl p-4 flex items-center gap-4 transition-all ${
+            className={`border rounded-xl p-4 flex items-center gap-4 transition-all ${
               auto.enabled
-                ? "border-primary/20 bg-gradient-to-r from-primary/8 to-transparent"
-                : "border-glass bg-card/30"
+                ? "border-primary/20 bg-primary/5"
+                : "border-border bg-card/30"
             }`}
           >
             <span className="text-2xl">{auto.icon}</span>
