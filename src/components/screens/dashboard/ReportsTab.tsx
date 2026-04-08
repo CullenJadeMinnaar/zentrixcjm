@@ -8,7 +8,6 @@ const reports = [
     positive: true,
     description: "Tasks completed, focus time, goal progress",
     icon: "⚡",
-    gradient: "from-primary/15 to-primary/5",
   },
   {
     title: "AI Interactions",
@@ -17,7 +16,6 @@ const reports = [
     positive: true,
     description: "Questions asked and insights received",
     icon: "💬",
-    gradient: "from-accent/15 to-accent/5",
   },
   {
     title: "Wellness Score",
@@ -26,7 +24,6 @@ const reports = [
     positive: true,
     description: "Average mood, wellness activities completed",
     icon: "🧠",
-    gradient: "from-[hsl(330_90%_60%)]/15 to-[hsl(330_90%_60%)]/5",
   },
   {
     title: "Time Saved",
@@ -35,7 +32,6 @@ const reports = [
     positive: true,
     description: "Hours saved through ZENTRIX automations",
     icon: "⏱️",
-    gradient: "from-[hsl(200_90%_55%)]/15 to-[hsl(200_90%_55%)]/5",
   },
 ];
 
@@ -66,12 +62,12 @@ export default function ReportsTab() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: i * 0.08 }}
-            className={`bg-gradient-to-br ${r.gradient} border border-glass rounded-2xl p-5`}
+            className="bg-card/60 border border-border rounded-xl p-5"
           >
             <div className="flex items-start justify-between">
               <span className="text-2xl">{r.icon}</span>
               <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${
-                r.positive ? "bg-accent/15 text-accent" : "bg-destructive/15 text-destructive"
+                r.positive ? "bg-primary/10 text-primary" : "bg-destructive/15 text-destructive"
               }`}>
                 {r.change}
               </span>
@@ -94,10 +90,10 @@ export default function ReportsTab() {
               initial={{ opacity: 0, x: -5 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 + i * 0.05 }}
-              className="flex items-center gap-3 py-2.5 px-4 rounded-xl bg-card/50 border border-glass"
+              className="flex items-center gap-3 py-2.5 px-4 rounded-lg bg-card/50 border border-border/50"
             >
               <div className={`w-2 h-2 rounded-full ${
-                a.type === "wellness" ? "bg-accent" : a.type === "reminder" ? "bg-primary" : a.type === "automation" ? "bg-[hsl(330_90%_60%)]" : "bg-[hsl(200_90%_55%)]"
+                a.type === "wellness" ? "bg-primary" : a.type === "reminder" ? "bg-accent" : "bg-muted-foreground"
               }`} />
               <span className="text-sm flex-1">{a.action}</span>
               <span className="text-[10px] text-muted-foreground">{a.time}</span>

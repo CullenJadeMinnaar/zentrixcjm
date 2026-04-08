@@ -15,11 +15,11 @@ const dailyQuotes = [
 ];
 
 const moodOptions = [
-  { emoji: "😄", label: "Great", value: 5, color: "from-green-400 to-emerald-500" },
-  { emoji: "🙂", label: "Good", value: 4, color: "from-blue-400 to-cyan-500" },
-  { emoji: "😐", label: "Okay", value: 3, color: "from-yellow-400 to-amber-500" },
-  { emoji: "😔", label: "Low", value: 2, color: "from-orange-400 to-red-400" },
-  { emoji: "😢", label: "Rough", value: 1, color: "from-red-400 to-rose-500" },
+  { emoji: "😄", label: "Great", value: 5 },
+  { emoji: "🙂", label: "Good", value: 4 },
+  { emoji: "😐", label: "Okay", value: 3 },
+  { emoji: "😔", label: "Low", value: 2 },
+  { emoji: "😢", label: "Rough", value: 1 },
 ];
 
 const wellnessActivities = [
@@ -42,7 +42,6 @@ export default function WellnessTab() {
   const [todayMood, setTodayMood] = useState<number | null>(null);
   const [moodNote, setMoodNote] = useState("");
   const [moodHistory, setMoodHistory] = useState<MoodEntry[]>([]);
-  const [showChat, setShowChat] = useState(false);
 
   useEffect(() => {
     setCurrentQuote(Math.floor(Math.random() * dailyQuotes.length));
@@ -61,35 +60,31 @@ export default function WellnessTab() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
-      {/* Daily Quote Card */}
+      {/* Daily Quote */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-card to-card border border-primary/20 p-8"
+        className="rounded-xl bg-card/60 border border-border p-8"
       >
-        <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-accent/5 rounded-full blur-3xl" />
-        <div className="relative">
-          <span className="text-[10px] uppercase tracking-[4px] text-primary font-medium">Daily Affirmation</span>
-          <AnimatePresence mode="wait">
-            <motion.blockquote
-              key={currentQuote}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="text-xl md:text-2xl font-display font-semibold leading-relaxed mt-4 mb-3"
-            >
-              "{quote.text}"
-            </motion.blockquote>
-          </AnimatePresence>
-          <span className="text-sm text-muted-foreground">— {quote.author}</span>
-          <button
-            onClick={() => setCurrentQuote((currentQuote + 1) % dailyQuotes.length)}
-            className="block mt-4 text-xs text-primary hover:text-primary/80 transition-colors"
+        <span className="text-[10px] uppercase tracking-[4px] text-primary font-medium">Daily Affirmation</span>
+        <AnimatePresence mode="wait">
+          <motion.blockquote
+            key={currentQuote}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="text-xl md:text-2xl font-display font-semibold leading-relaxed mt-4 mb-3"
           >
-            Next quote →
-          </button>
-        </div>
+            "{quote.text}"
+          </motion.blockquote>
+        </AnimatePresence>
+        <span className="text-sm text-muted-foreground">— {quote.author}</span>
+        <button
+          onClick={() => setCurrentQuote((currentQuote + 1) % dailyQuotes.length)}
+          className="block mt-4 text-xs text-primary hover:text-primary/80 transition-colors"
+        >
+          Next quote →
+        </button>
       </motion.div>
 
       {/* Mood Check-in */}
@@ -97,7 +92,7 @@ export default function WellnessTab() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="bg-card border border-border rounded-2xl p-6"
+        className="bg-card/60 border border-border rounded-xl p-6"
       >
         <h3 className="font-display text-lg font-semibold mb-1">How are you feeling?</h3>
         <p className="text-sm text-muted-foreground mb-5">Check in with yourself — no judgement</p>
@@ -109,9 +104,9 @@ export default function WellnessTab() {
               whileHover={{ scale: 1.15 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => logMood(mood.value)}
-              className={`flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all ${
+              className={`flex flex-col items-center gap-1.5 p-3 rounded-lg transition-all ${
                 todayMood === mood.value
-                  ? "bg-primary/15 border border-primary/30 ring-2 ring-primary/20"
+                  ? "bg-primary/10 border border-primary/30 ring-2 ring-primary/20"
                   : "hover:bg-secondary border border-transparent"
               }`}
             >
@@ -127,7 +122,7 @@ export default function WellnessTab() {
             animate={{ opacity: 1, height: "auto" }}
             className="mt-4 pt-4 border-t border-border"
           >
-            <p className="text-sm text-accent mb-2">
+            <p className="text-sm text-primary mb-2">
               ✓ Mood logged — {moodOptions.find(m => m.value === todayMood)?.label}
             </p>
             <p className="text-xs text-muted-foreground">
@@ -143,7 +138,7 @@ export default function WellnessTab() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-card border border-border rounded-2xl p-6"
+          className="bg-card/60 border border-border rounded-xl p-6"
         >
           <h3 className="font-display text-lg font-semibold mb-1">Quick Wellness</h3>
           <p className="text-xs text-muted-foreground mb-4">Small actions, big impact</p>
@@ -154,7 +149,7 @@ export default function WellnessTab() {
                 initial={{ opacity: 0, x: -5 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.25 + i * 0.05 }}
-                className="flex items-center gap-3 p-3 rounded-xl hover:bg-secondary/50 transition-all cursor-pointer group"
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/50 transition-all cursor-pointer group"
               >
                 <span className="text-xl group-hover:scale-110 transition-transform">{a.icon}</span>
                 <div className="flex-1">
@@ -172,7 +167,7 @@ export default function WellnessTab() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-gradient-to-br from-accent/10 via-card to-card border border-accent/20 rounded-2xl p-6"
+          className="bg-card/60 border border-border rounded-xl p-6"
         >
           <h3 className="font-display text-lg font-semibold mb-1">Talk to ZENTRIX</h3>
           <p className="text-xs text-muted-foreground mb-4">Your AI friend & wellness companion</p>
@@ -187,7 +182,7 @@ export default function WellnessTab() {
             ].map((prompt) => (
               <button
                 key={prompt}
-                className="w-full text-left px-4 py-2.5 rounded-xl bg-secondary/50 border border-border hover:border-accent/30 hover:bg-accent/5 text-sm transition-all"
+                className="w-full text-left px-4 py-2.5 rounded-lg bg-secondary/50 border border-border hover:border-primary/30 hover:bg-primary/5 text-sm transition-all"
               >
                 💬 {prompt}
               </button>

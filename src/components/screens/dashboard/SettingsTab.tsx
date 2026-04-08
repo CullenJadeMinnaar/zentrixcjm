@@ -40,8 +40,8 @@ export default function SettingsTab({ user, onLogout }: SettingsTabProps) {
       {/* Profile */}
       <section className="mb-8">
         <h3 className="text-[11px] font-semibold mb-3 text-muted-foreground uppercase tracking-[3px]">Profile</h3>
-        <div className="bg-glass border border-glass rounded-2xl p-5 flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-[hsl(330_90%_60%)] flex items-center justify-center text-primary-foreground text-xl font-bold">
+        <div className="bg-card/60 border border-border rounded-xl p-5 flex items-center gap-4">
+          <div className="w-14 h-14 rounded-xl bg-primary/15 border border-primary/20 flex items-center justify-center text-primary text-xl font-bold">
             {user.name[0]?.toUpperCase() || "U"}
           </div>
           <div>
@@ -65,10 +65,10 @@ export default function SettingsTab({ user, onLogout }: SettingsTabProps) {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setSelectedPersonality(p.id)}
-              className={`border rounded-2xl p-4 text-left transition-all ${
+              className={`border rounded-xl p-4 text-left transition-all ${
                 selectedPersonality === p.id
                   ? "border-primary/40 bg-primary/10 ring-1 ring-primary/20"
-                  : "border-glass bg-glass hover:border-primary/20"
+                  : "border-border bg-card/40 hover:border-primary/20"
               }`}
             >
               <div className="flex items-center gap-2 mb-1.5">
@@ -86,7 +86,7 @@ export default function SettingsTab({ user, onLogout }: SettingsTabProps) {
         <h3 className="text-[11px] font-semibold mb-3 text-muted-foreground uppercase tracking-[3px]">Preferences</h3>
         <div className="space-y-3">
           {toggleItems.map((toggle) => (
-            <div key={toggle.label} className="flex items-center justify-between bg-glass border border-glass rounded-2xl p-4">
+            <div key={toggle.label} className="flex items-center justify-between bg-card/60 border border-border rounded-xl p-4">
               <div>
                 <div className="text-sm font-medium">{toggle.label}</div>
                 <div className="text-[11px] text-muted-foreground mt-0.5">{toggle.desc}</div>
