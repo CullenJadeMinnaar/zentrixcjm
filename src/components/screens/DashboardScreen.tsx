@@ -77,7 +77,6 @@ export default function DashboardScreen({
         fixed inset-y-0 left-0 z-40 transition-transform md:relative md:translate-x-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
-        {/* Logo area */}
         <div className="p-5 pb-0">
           <div className="flex items-center gap-2.5 mb-6">
             <ZentrixLogo size={28} />
@@ -85,19 +84,18 @@ export default function DashboardScreen({
             <button className="ml-auto md:hidden text-muted-foreground hover:text-foreground" onClick={() => setSidebarOpen(false)}>✕</button>
           </div>
 
-          <div className="bg-gradient-to-r from-primary/20 to-primary/5 border border-primary/20 text-primary text-[10px] px-3 py-1.5 rounded-lg text-center tracking-wider font-semibold uppercase mb-5">
+          <div className="bg-primary/10 border border-primary/20 text-primary text-[10px] px-3 py-1.5 rounded-md text-center tracking-wider font-semibold uppercase mb-5">
             {planLabel} plan
           </div>
         </div>
 
-        {/* Nav */}
         <nav className="flex flex-col gap-0.5 flex-1 px-3 overflow-y-auto">
           {navItems.map((item) => (
             <motion.button
               key={item.id}
               whileTap={{ scale: 0.97 }}
               onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
-              className={`px-3.5 py-2.5 rounded-xl text-sm text-left transition-all flex items-center gap-3 ${
+              className={`px-3.5 py-2.5 rounded-lg text-sm text-left transition-all flex items-center gap-3 ${
                 activeTab === item.id
                   ? "bg-primary/10 text-foreground font-medium border border-primary/15"
                   : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-transparent"
@@ -106,16 +104,15 @@ export default function DashboardScreen({
               <span className="text-base w-6 text-center">{item.icon}</span>
               {item.label}
               {item.id === "reminders" && (
-                <span className="ml-auto bg-primary text-primary-foreground text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">2</span>
+                <span className="ml-auto bg-accent text-accent-foreground text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">2</span>
               )}
             </motion.button>
           ))}
         </nav>
 
-        {/* User area */}
         <div className="p-4 border-t border-sidebar-border">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-[hsl(330_90%_60%)] flex items-center justify-center text-primary-foreground text-sm font-bold shrink-0">
+            <div className="w-9 h-9 rounded-lg bg-primary/20 border border-primary/20 flex items-center justify-center text-primary text-sm font-bold shrink-0">
               {user.name[0]?.toUpperCase() || "U"}
             </div>
             <div className="min-w-0">
@@ -124,10 +121,10 @@ export default function DashboardScreen({
             </div>
           </div>
           <div className="flex gap-2">
-            <button onClick={onPrivacy} className="flex-1 bg-secondary/50 border border-border rounded-lg text-muted-foreground text-[11px] py-1.5 hover:text-foreground transition-colors">
+            <button onClick={onPrivacy} className="flex-1 bg-secondary/50 border border-border rounded-md text-muted-foreground text-[11px] py-1.5 hover:text-foreground transition-colors">
               Privacy
             </button>
-            <button onClick={onLogout} className="flex-1 bg-secondary/50 border border-border rounded-lg text-muted-foreground text-[11px] py-1.5 hover:text-foreground transition-colors">
+            <button onClick={onLogout} className="flex-1 bg-secondary/50 border border-border rounded-md text-muted-foreground text-[11px] py-1.5 hover:text-foreground transition-colors">
               Sign out
             </button>
           </div>
@@ -136,7 +133,6 @@ export default function DashboardScreen({
 
       {/* Main content */}
       <main className="flex-1 flex flex-col overflow-hidden bg-gradient-mesh">
-        {/* Top bar */}
         <div className="px-6 py-4 border-b border-border/50 flex items-center gap-3 bg-background/50 backdrop-blur-sm">
           <button className="md:hidden text-foreground text-xl" onClick={() => setSidebarOpen(true)}>☰</button>
           <div className="flex-1">
@@ -155,12 +151,11 @@ export default function DashboardScreen({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse" />
-            <span className="text-[10px] text-accent font-medium hidden sm:block">Online</span>
+            <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
+            <span className="text-[10px] text-primary font-medium hidden sm:block">Online</span>
           </div>
         </div>
 
-        {/* Tab content */}
         <AnimatePresence mode="wait">
           {activeTab === "ai" && (
             <motion.div
@@ -180,15 +175,15 @@ export default function DashboardScreen({
                     className={`flex items-start gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
                   >
                     {msg.role === "assistant" && (
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary/20 to-accent/10 border border-primary/20 flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 mt-0.5">
                         <ZentrixLogo size={16} />
                       </div>
                     )}
                     <div
-                      className={`max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                      className={`max-w-[75%] rounded-xl px-4 py-3 text-sm leading-relaxed ${
                         msg.role === "user"
-                          ? "bg-gradient-to-br from-primary/25 to-primary/15 border border-primary/20 rounded-br-md"
-                          : "bg-card/80 border border-border/60 rounded-bl-md backdrop-blur-sm"
+                          ? "bg-primary/15 border border-primary/20 rounded-br-sm"
+                          : "bg-card/80 border border-border/60 rounded-bl-sm backdrop-blur-sm"
                       }`}
                     >
                       {msg.role === "assistant" ? (
@@ -203,10 +198,10 @@ export default function DashboardScreen({
                 ))}
                 {loading && (
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary/20 to-accent/10 border border-primary/20 flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
                       <ZentrixLogo size={16} />
                     </div>
-                    <div className="bg-card/80 border border-border/60 rounded-2xl rounded-bl-md px-5 py-3 text-sm flex gap-1">
+                    <div className="bg-card/80 border border-border/60 rounded-xl rounded-bl-sm px-5 py-3 text-sm flex gap-1">
                       <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                       <span className="w-2 h-2 rounded-full bg-primary animate-pulse" style={{ animationDelay: "0.2s" }} />
                       <span className="w-2 h-2 rounded-full bg-primary animate-pulse" style={{ animationDelay: "0.4s" }} />
@@ -224,14 +219,14 @@ export default function DashboardScreen({
                   placeholder="Talk to ZENTRIX — your AI friend, therapist & strategist..."
                   maxLength={MAX_INPUT_LENGTH}
                   rows={2}
-                  className="flex-1 bg-secondary/50 border border-border rounded-2xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all"
+                  className="flex-1 bg-secondary/50 border border-border rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all"
                 />
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={onSend}
                   disabled={loading || !input.trim()}
-                  className="bg-gradient-to-r from-primary to-[hsl(330_90%_60%)] text-primary-foreground rounded-2xl px-6 py-3 text-sm font-semibold hover:brightness-110 transition-all disabled:opacity-40"
+                  className="bg-primary text-primary-foreground rounded-lg px-6 py-3 text-sm font-semibold hover:brightness-110 transition-all disabled:opacity-40"
                 >
                   {loading ? "···" : "Send"}
                 </motion.button>

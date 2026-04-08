@@ -20,16 +20,13 @@ export default function AuthScreen({ mode, setMode, onSubmit, error, locked, cou
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden">
-      {/* Background effects */}
       <div className="fixed inset-0 bg-gradient-mesh pointer-events-none" />
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-20 pointer-events-none animate-glow-pulse"
-        style={{ background: "radial-gradient(circle, hsl(260 100% 65% / 0.15), transparent 60%)" }} />
 
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-glass border border-glass rounded-3xl p-8 md:p-10 w-full max-w-md relative z-10 shadow-2xl shadow-primary/5"
+        className="bg-card/80 border border-border rounded-xl p-8 md:p-10 w-full max-w-md relative z-10 backdrop-blur-sm"
       >
         <button onClick={onBack} className="text-muted-foreground text-sm hover:text-foreground mb-5 block transition-colors">
           ← Back
@@ -55,7 +52,7 @@ export default function AuthScreen({ mode, setMode, onSubmit, error, locked, cou
           <motion.div
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-destructive/10 border border-destructive/20 text-destructive rounded-xl px-4 py-3 text-sm mb-4"
+            className="bg-destructive/10 border border-destructive/20 text-destructive rounded-lg px-4 py-3 text-sm mb-4"
           >
             🔒 Locked — try again in {mins}:{String(secs).padStart(2, "0")}
           </motion.div>
@@ -64,7 +61,7 @@ export default function AuthScreen({ mode, setMode, onSubmit, error, locked, cou
           <motion.div
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-destructive/10 border border-destructive/20 text-destructive rounded-xl px-4 py-3 text-sm mb-4"
+            className="bg-destructive/10 border border-destructive/20 text-destructive rounded-lg px-4 py-3 text-sm mb-4"
           >
             {error}
           </motion.div>
@@ -82,7 +79,7 @@ export default function AuthScreen({ mode, setMode, onSubmit, error, locked, cou
                 autoComplete="name"
                 required={mode === "register"}
                 disabled={locked}
-                className="bg-secondary/50 border border-border rounded-xl px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 transition-all disabled:opacity-50"
+                className="bg-secondary/50 border border-border rounded-lg px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30 transition-all disabled:opacity-50"
               />
             </div>
           )}
@@ -96,7 +93,7 @@ export default function AuthScreen({ mode, setMode, onSubmit, error, locked, cou
               autoComplete="email"
               required
               disabled={locked}
-              className="bg-secondary/50 border border-border rounded-xl px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 transition-all disabled:opacity-50"
+              className="bg-secondary/50 border border-border rounded-lg px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30 transition-all disabled:opacity-50"
             />
           </div>
           {mode !== "forgot" && (
@@ -110,7 +107,7 @@ export default function AuthScreen({ mode, setMode, onSubmit, error, locked, cou
                 autoComplete={mode === "login" ? "current-password" : "new-password"}
                 required
                 disabled={locked}
-                className="bg-secondary/50 border border-border rounded-xl px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 transition-all disabled:opacity-50"
+                className="bg-secondary/50 border border-border rounded-lg px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30 transition-all disabled:opacity-50"
               />
             </div>
           )}
@@ -119,7 +116,7 @@ export default function AuthScreen({ mode, setMode, onSubmit, error, locked, cou
             whileTap={{ scale: 0.98 }}
             type="submit"
             disabled={locked}
-            className="bg-gradient-to-r from-primary to-[hsl(330_90%_60%)] text-primary-foreground w-full py-3.5 rounded-xl text-sm font-bold hover:brightness-110 transition-all disabled:opacity-50 mt-2 glow-primary"
+            className="bg-primary text-primary-foreground w-full py-3.5 rounded-lg text-sm font-bold hover:brightness-110 transition-all disabled:opacity-50 mt-2"
           >
             {mode === "login" ? "Sign in" : mode === "register" ? "Start free trial →" : "Send reset link"}
           </motion.button>

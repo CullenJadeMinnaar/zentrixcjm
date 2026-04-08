@@ -28,13 +28,13 @@ export default function PaywallScreen({ userName, onSelect, error }: PaywallScre
           Welcome, <span className="text-foreground font-medium">{userName}</span>. Activate your intelligence layer.
         </p>
         <p className="text-sm font-medium mb-10">
-          <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <span className="text-accent">
             🎉 {COMPANY_INFO.trialDays}-day free trial on all plans — no card required
           </span>
         </p>
 
         {error && (
-          <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-xl px-4 py-3 text-sm mb-6 inline-block">
+          <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-lg px-4 py-3 text-sm mb-6 inline-block">
             {error}
           </div>
         )}
@@ -47,14 +47,14 @@ export default function PaywallScreen({ userName, onSelect, error }: PaywallScre
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
               whileHover={{ y: -5, transition: { duration: 0.2 } }}
-              className={`relative bg-glass border rounded-2xl p-7 text-left transition-all ${
+              className={`relative bg-card/80 border rounded-xl p-7 text-left transition-all backdrop-blur-sm ${
                 plan.popular
                   ? "border-primary/50 glow-primary"
-                  : "border-glass hover:border-primary/20"
+                  : "border-border hover:border-primary/20"
               }`}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-[hsl(330_90%_60%)] text-primary-foreground text-[11px] px-4 py-1 rounded-full font-semibold whitespace-nowrap">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[11px] px-4 py-1 rounded-full font-semibold whitespace-nowrap">
                   Most popular
                 </div>
               )}
@@ -74,7 +74,7 @@ export default function PaywallScreen({ userName, onSelect, error }: PaywallScre
               <ul className="flex flex-col gap-3 mb-7">
                 {plan.features.map((f) => (
                   <li key={f} className="text-sm text-secondary-foreground/80 flex items-start gap-2.5">
-                    <span className="text-accent mt-0.5 text-xs">✓</span>
+                    <span className="text-primary mt-0.5 text-xs">✓</span>
                     {f}
                   </li>
                 ))}
@@ -84,9 +84,9 @@ export default function PaywallScreen({ userName, onSelect, error }: PaywallScre
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => onSelect(plan.id)}
-                className={`w-full py-3.5 rounded-xl text-sm font-bold transition-all ${
+                className={`w-full py-3.5 rounded-lg text-sm font-bold transition-all ${
                   plan.popular
-                    ? "bg-gradient-to-r from-primary to-[hsl(330_90%_60%)] text-primary-foreground hover:brightness-110 glow-primary"
+                    ? "bg-primary text-primary-foreground hover:brightness-110"
                     : "bg-transparent border border-primary/40 text-primary hover:bg-primary/10"
                 }`}
               >
