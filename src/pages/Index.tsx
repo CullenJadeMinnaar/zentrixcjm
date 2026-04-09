@@ -37,6 +37,10 @@ const Index = () => {
   const chatEndRef = useRef<HTMLDivElement>(null!);
 
   useEffect(() => {
+    applyTheme(getSavedTheme());
+  }, []);
+
+  useEffect(() => {
     if (!authLocked) return;
     const t = setInterval(() => {
       setLockCountdown((c) => {
