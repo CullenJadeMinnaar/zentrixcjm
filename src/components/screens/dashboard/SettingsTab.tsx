@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { THEMES, applyTheme, getSavedTheme } from "@/lib/themes";
 
 interface User {
   name: string;
@@ -19,11 +20,16 @@ const personalities = [
 ];
 
 export default function SettingsTab({ user, onLogout }: SettingsTabProps) {
-  const [selectedPersonality, setSelectedPersonality] = useState("jarvis");
+  const [selectedPersonality, setSelectedPersonality] = useState("morpheus");
+  const [selectedTheme, setSelectedTheme] = useState(getSavedTheme());
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(true);
   const [dailyQuotes, setDailyQuotes] = useState(true);
   const [moodReminders, setMoodReminders] = useState(true);
+
+  useEffect(() => {
+    applyTheme(selectedTheme);
+  }, [selectedTheme]);
 
   const toggleItems = [
     { label: "Push Notifications", desc: "Alerts for reminders, insights & updates", value: notifications, set: setNotifications },
@@ -51,6 +57,33 @@ export default function SettingsTab({ user, onLogout }: SettingsTabProps) {
           <button onClick={onLogout} className="ml-auto text-sm text-destructive/70 hover:text-destructive transition-colors">
             Sign out
           </button>
+        </div>
+      </section>
+
+      {/* Themes */}
+      <section className="mb-8">
+        <h3 className="text-[11px] font-semibold mb-3 text-muted-foreground uppercase tracking-[3px]">Theme</h3>
+        <p className="text-xs text-muted-foreground mb-4">Choose your visual vibe</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {THEMES.map((theme) => (
+            <motion.button
+              key={theme.id}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setSelectedTheme(theme.id)}
+              className={`border rounded-xl p-4 text-left transition-all ${
+                selectedTheme === theme.id
+                  ? "border-primary/40 bg-primary/10 ring-1 ring-primary/20"
+                  : "border-border bg-card/40 hover:border-primary/20"
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-xl">{theme.icon}</span>
+                <span className="font-display font-semibold text-sm">{theme.label}</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-snug">{theme.desc}</p>
+            </motion.button>
+          ))}
         </div>
       </section>
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, FormEvent } from "react";
+import { applyTheme, getSavedTheme } from "@/lib/themes";
 import LandingScreen from "@/components/screens/LandingScreen";
 import AuthScreen from "@/components/screens/AuthScreen";
 import PaywallScreen from "@/components/screens/PaywallScreen";
