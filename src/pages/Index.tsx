@@ -8,6 +8,7 @@ import PrivacyScreen from "@/components/screens/PrivacyScreen";
 import { RateLimiter, sanitize, validateEmail, validatePassword } from "@/lib/auth-helpers";
 import { PLANS } from "@/lib/constants";
 import { streamChat } from "@/lib/chat-stream";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 type Screen = "landing" | "auth" | "paywall" | "dashboard" | "privacy";
@@ -28,7 +29,9 @@ const Index = () => {
   const [authError, setAuthError] = useState("");
   const [authLocked, setAuthLocked] = useState(false);
   const [lockCountdown, setLockCountdown] = useState(0);
+  const [authLoading, setAuthLoading] = useState(false);
   const [payError, setPayError] = useState("");
+  const [initialLoading, setInitialLoading] = useState(true);
   const [aiMessages, setAiMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([
     { role: "assistant", content: "Hey! 👋 I'm **ZENTRIX** — think of me as your personal Morpheus. I'm part AI assistant, part life coach, part therapist, part best friend.\n\nI'm here to help you **think clearer**, **feel better**, and **move smarter**. Whether you need to vent, strategize, or just have someone to talk to — I'm always here.\n\nWhat's on your mind today?" },
   ]);
@@ -36,10 +39,45 @@ const Index = () => {
   const [aiLoading, setAiLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null!);
 
+  // Apply saved theme
   useEffect(() => {
     applyTheme(getSavedTheme());
   }, []);
 
+  // Auth state listener
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("user_id", session.user.id)
+          .single();
+
+        setUser({
+          name: profile?.display_name || session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "User",
+          email: session.user.email || "",
+        });
+        // If user is authenticated, go to dashboard (skip paywall for now)
+        if (screen === "landing" || screen === "auth") {
+          setScreen("dashboard");
+          setPlanLabel("Trial");
+        }
+      } else {
+        setUser(null);
+        if (screen === "dashboard") {
+          setScreen("landing");
+        }
+      }
+      setInitialLoading(false);
+    });
+
+    supabase.auth.getSession();
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Lock countdown timer
   useEffect(() => {
     if (!authLocked) return;
     const t = setInterval(() => {
@@ -51,12 +89,13 @@ const Index = () => {
     return () => clearInterval(t);
   }, [authLocked]);
 
+  // Auto-scroll chat
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [aiMessages]);
 
   const handleAuth = useCallback(
-    (e: FormEvent<HTMLFormElement>) => {
+    async (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       const form = e.currentTarget;
       const email = sanitize((form.elements.namedItem("email") as HTMLInputElement)?.value || "");
@@ -64,7 +103,23 @@ const Index = () => {
       const name = sanitize((form.elements.namedItem("name") as HTMLInputElement)?.value || "");
 
       if (!validateEmail(email)) { setAuthError("Enter a valid email address."); return; }
-      if (authMode !== "forgot" && !validatePassword(password)) {
+
+      if (authMode === "forgot") {
+        setAuthLoading(true);
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        setAuthLoading(false);
+        if (error) {
+          setAuthError(error.message);
+        } else {
+          toast.success("Check your email for a password reset link.");
+          setAuthMode("login");
+        }
+        return;
+      }
+
+      if (!validatePassword(password)) {
         setAuthError("Password must be 8–128 characters."); return;
       }
 
@@ -78,8 +133,32 @@ const Index = () => {
       }
 
       setAuthError("");
-      setUser({ email, name: name || email.split("@")[0] });
-      setScreen("paywall");
+      setAuthLoading(true);
+
+      if (authMode === "register") {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { full_name: name || email.split("@")[0] },
+            emailRedirectTo: window.location.origin,
+          },
+        });
+        setAuthLoading(false);
+        if (error) {
+          setAuthError(error.message);
+        } else {
+          toast.success("Check your email to verify your account, then sign in.");
+          setAuthMode("login");
+        }
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        setAuthLoading(false);
+        if (error) {
+          setAuthError(error.message);
+        }
+        // onAuthStateChange will handle navigation
+      }
     },
     [authMode]
   );
@@ -89,6 +168,13 @@ const Index = () => {
     if (!selected) { setPayError("Invalid plan selected."); return; }
     setPlanLabel(selected.label);
     setScreen("dashboard");
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setPlanLabel("");
+    setScreen("landing");
   };
 
   const handleSendMessage = async () => {
@@ -130,6 +216,17 @@ const Index = () => {
     }
   };
 
+  if (initialLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <span className="text-sm text-muted-foreground">Loading ZENTRIX...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {screen === "landing" && (
@@ -143,6 +240,7 @@ const Index = () => {
           error={authError}
           locked={authLocked}
           countdown={lockCountdown}
+          loading={authLoading}
           onBack={() => setScreen("landing")}
         />
       )}
@@ -156,7 +254,7 @@ const Index = () => {
       {screen === "dashboard" && user && (
         <DashboardScreen
           user={user}
-          planLabel={planLabel}
+          planLabel={planLabel || "Trial"}
           messages={aiMessages}
           input={input}
           setInput={setInput}
@@ -164,11 +262,7 @@ const Index = () => {
           loading={aiLoading}
           chatEndRef={chatEndRef}
           onPrivacy={() => setScreen("privacy")}
-          onLogout={() => {
-            setUser(null);
-            setPlanLabel("");
-            setScreen("landing");
-          }}
+          onLogout={handleLogout}
         />
       )}
       {screen === "privacy" && (
