@@ -141,7 +141,7 @@ export default function DashboardScreen({
               {navItems.find(n => n.id === activeTab)?.label}
             </div>
             <div className="text-[11px] text-muted-foreground mt-0.5">
-              {activeTab === "ai" && `Your personal Jarvis · ${planLabel} plan`}
+              {activeTab === "ai" && `Your personal Morpheus · ${planLabel} plan`}
               {activeTab === "wellness" && "Daily affirmations, mood tracking & self-care"}
               {activeTab === "insights" && "Curated intelligence, updated in real-time"}
               {activeTab === "reminders" && "Never miss a thing — ZENTRIX keeps you on track"}

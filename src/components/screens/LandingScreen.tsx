@@ -8,7 +8,7 @@ interface LandingScreenProps {
 }
 
 const features = [
-  { icon: "🤖", title: "AI Intelligence", desc: "Your personal Jarvis — always learning, always ready" },
+  { icon: "🤖", title: "AI Intelligence", desc: "Your personal Morpheus — always learning, always ready" },
   { icon: "🧠", title: "Mental Wellness", desc: "Daily affirmations, mood tracking, therapeutic AI" },
   { icon: "⚡", title: "Smart Automations", desc: "Set it, forget it — ZENTRIX handles the rest" },
   { icon: "🔔", title: "Reminders & Alerts", desc: "Never miss a thing — your AI keeps you on track" },
@@ -65,7 +65,7 @@ export default function LandingScreen({ onAuth, onPrivacy }: LandingScreenProps)
 
           <p className="text-muted-foreground text-base md:text-xl max-w-2xl leading-relaxed mb-12">
             ZENTRIX is the AI that knows you. Your therapist, your strategist, your reminder system — 
-            all in one. Like having Jarvis, but for your entire life.
+            all in one. Like having Morpheus guiding you through life.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 mb-20">
