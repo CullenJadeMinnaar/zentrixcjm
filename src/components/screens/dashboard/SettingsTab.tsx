@@ -12,7 +12,7 @@ interface SettingsTabProps {
 }
 
 const personalities = [
-  { id: "jarvis", label: "Jarvis", desc: "Confident, witty, proactive — your Iron Man AI", icon: "🤖" },
+  { id: "morpheus", label: "Morpheus", desc: "Wise, guiding, truth-revealing — your Matrix mentor", icon: "🕶️" },
   { id: "therapist", label: "Therapist", desc: "Empathetic, gentle, focused on your wellbeing", icon: "💚" },
   { id: "mentor", label: "Mentor", desc: "Wise, patient, growth-focused guidance", icon: "🧙" },
   { id: "strategist", label: "Strategist", desc: "Sharp, analytical, business-first thinking", icon: "♟️" },

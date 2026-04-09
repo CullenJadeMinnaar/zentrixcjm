@@ -8,7 +8,7 @@ interface LandingScreenProps {
 }
 
 const features = [
-  { icon: "🤖", title: "AI Intelligence", desc: "Your personal Jarvis — always learning, always ready" },
+  { icon: "🤖", title: "AI Intelligence", desc: "Your personal Morpheus — always learning, always ready" },
   { icon: "🧠", title: "Mental Wellness", desc: "Daily affirmations, mood tracking, therapeutic AI" },
   { icon: "⚡", title: "Smart Automations", desc: "Set it, forget it — ZENTRIX handles the rest" },
   { icon: "🔔", title: "Reminders & Alerts", desc: "Never miss a thing — your AI keeps you on track" },
