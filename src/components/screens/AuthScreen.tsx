@@ -1,4 +1,4 @@
-import { FormEvent } from "react";
+import { FormEvent, useState } from "react";
 import { motion } from "framer-motion";
 import ZentrixLogo from "../ZentrixLogo";
 
@@ -11,12 +11,14 @@ interface AuthScreenProps {
   error: string;
   locked: boolean;
   countdown: number;
+  loading?: boolean;
   onBack: () => void;
 }
 
-export default function AuthScreen({ mode, setMode, onSubmit, error, locked, countdown, onBack }: AuthScreenProps) {
+export default function AuthScreen({ mode, setMode, onSubmit, error, locked, countdown, loading, onBack }: AuthScreenProps) {
   const mins = Math.floor(countdown / 60);
   const secs = countdown % 60;
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden">
@@ -78,7 +80,7 @@ export default function AuthScreen({ mode, setMode, onSubmit, error, locked, cou
                 maxLength={100}
                 autoComplete="name"
                 required={mode === "register"}
-                disabled={locked}
+                disabled={locked || loading}
                 className="bg-secondary/50 border border-border rounded-lg px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30 transition-all disabled:opacity-50"
               />
             </div>
@@ -92,33 +94,45 @@ export default function AuthScreen({ mode, setMode, onSubmit, error, locked, cou
               maxLength={254}
               autoComplete="email"
               required
-              disabled={locked}
+              disabled={locked || loading}
               className="bg-secondary/50 border border-border rounded-lg px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30 transition-all disabled:opacity-50"
             />
           </div>
           {mode !== "forgot" && (
             <div className="flex flex-col gap-1.5">
               <label className="text-xs text-muted-foreground font-medium tracking-wide">Password</label>
-              <input
-                name="password"
-                type="password"
-                placeholder="Min. 8 characters"
-                maxLength={128}
-                autoComplete={mode === "login" ? "current-password" : "new-password"}
-                required
-                disabled={locked}
-                className="bg-secondary/50 border border-border rounded-lg px-4 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30 transition-all disabled:opacity-50"
-              />
+              <div className="relative">
+                <input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Min. 8 characters"
+                  maxLength={128}
+                  autoComplete={mode === "login" ? "current-password" : "new-password"}
+                  required
+                  disabled={locked || loading}
+                  className="w-full bg-secondary/50 border border-border rounded-lg px-4 py-3.5 pr-12 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30 transition-all disabled:opacity-50"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors text-sm"
+                >
+                  {showPassword ? "🙈" : "👁️"}
+                </button>
+              </div>
             </div>
           )}
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             type="submit"
-            disabled={locked}
-            className="bg-primary text-primary-foreground w-full py-3.5 rounded-lg text-sm font-bold hover:brightness-110 transition-all disabled:opacity-50 mt-2"
+            disabled={locked || loading}
+            className="bg-primary text-primary-foreground w-full py-3.5 rounded-lg text-sm font-bold hover:brightness-110 transition-all disabled:opacity-50 mt-2 flex items-center justify-center gap-2"
           >
-            {mode === "login" ? "Sign in" : mode === "register" ? "Start free trial →" : "Send reset link"}
+            {loading && <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />}
+            {loading
+              ? "Please wait..."
+              : mode === "login" ? "Sign in" : mode === "register" ? "Create account →" : "Send reset link"}
           </motion.button>
         </form>
 
