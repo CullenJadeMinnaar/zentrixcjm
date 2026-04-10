@@ -2,7 +2,6 @@ import { FormEvent, useState } from "react";
 import { motion } from "framer-motion";
 import ZentrixLogo from "../ZentrixLogo";
 import { lovable } from "@/integrations/lovable/index";
-import ZentrixLogo from "../ZentrixLogo";
 
 type AuthMode = "login" | "register" | "forgot";
 
