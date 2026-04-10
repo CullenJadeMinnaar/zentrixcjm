@@ -148,6 +148,9 @@ export default function DashboardScreen({
             </div>
             <div className="text-[11px] text-muted-foreground mt-0.5">
               {activeTab === "ai" && `Your personal Morpheus · ${planLabel} plan`}
+              {activeTab === "memories" && "People, relationships & emotional context Morpheus remembers"}
+              {activeTab === "creative" && "Generate images, memes, stickers & digital art with AI"}
+              {activeTab === "history" && "Browse your past conversations & interactions"}
               {activeTab === "wellness" && "Daily affirmations, mood tracking & self-care"}
               {activeTab === "insights" && "Curated intelligence, updated in real-time"}
               {activeTab === "reminders" && "Never miss a thing — ZENTRIX keeps you on track"}
