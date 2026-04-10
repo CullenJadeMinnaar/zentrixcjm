@@ -9,6 +9,9 @@ import ReportsTab from "./dashboard/ReportsTab";
 import SettingsTab from "./dashboard/SettingsTab";
 import WellnessTab from "./dashboard/WellnessTab";
 import RemindersTab from "./dashboard/RemindersTab";
+import MemoriesTab from "./dashboard/MemoriesTab";
+import HistoryTab from "./dashboard/HistoryTab";
+import CreativeTab from "./dashboard/CreativeTab";
 
 interface Message {
   role: "user" | "assistant";
@@ -33,11 +36,14 @@ interface DashboardScreenProps {
   onLogout: () => void;
 }
 
-type Tab = "ai" | "wellness" | "insights" | "reminders" | "automations" | "reports" | "settings";
+type Tab = "ai" | "memories" | "wellness" | "history" | "creative" | "insights" | "reminders" | "automations" | "reports" | "settings";
 
 const navItems: { id: Tab; label: string; icon: string }[] = [
-  { id: "ai", label: "AI Assistant", icon: "🤖" },
-  { id: "wellness", label: "Wellness", icon: "🧠" },
+  { id: "ai", label: "Morpheus", icon: "🕶️" },
+  { id: "memories", label: "Memory Vault", icon: "🧠" },
+  { id: "creative", label: "Creative Studio", icon: "🎨" },
+  { id: "history", label: "History", icon: "📜" },
+  { id: "wellness", label: "Wellness", icon: "💚" },
   { id: "insights", label: "Insights", icon: "📊" },
   { id: "reminders", label: "Reminders", icon: "🔔" },
   { id: "automations", label: "Automations", icon: "⚡" },
@@ -142,6 +148,9 @@ export default function DashboardScreen({
             </div>
             <div className="text-[11px] text-muted-foreground mt-0.5">
               {activeTab === "ai" && `Your personal Morpheus · ${planLabel} plan`}
+              {activeTab === "memories" && "People, relationships & emotional context Morpheus remembers"}
+              {activeTab === "creative" && "Generate images, memes, stickers & digital art with AI"}
+              {activeTab === "history" && "Browse your past conversations & interactions"}
               {activeTab === "wellness" && "Daily affirmations, mood tracking & self-care"}
               {activeTab === "insights" && "Curated intelligence, updated in real-time"}
               {activeTab === "reminders" && "Never miss a thing — ZENTRIX keeps you on track"}
@@ -234,6 +243,24 @@ export default function DashboardScreen({
               <div className="px-6 pb-3 text-[10px] text-muted-foreground/30">
                 {input.length}/{MAX_INPUT_LENGTH} · Enter to send · Shift+Enter for new line
               </div>
+            </motion.div>
+          )}
+
+          {activeTab === "memories" && (
+            <motion.div key="memories" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto">
+              <MemoriesTab />
+            </motion.div>
+          )}
+
+          {activeTab === "creative" && (
+            <motion.div key="creative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto">
+              <CreativeTab />
+            </motion.div>
+          )}
+
+          {activeTab === "history" && (
+            <motion.div key="history" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto">
+              <HistoryTab />
             </motion.div>
           )}
 
