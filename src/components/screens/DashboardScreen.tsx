@@ -246,6 +246,24 @@ export default function DashboardScreen({
             </motion.div>
           )}
 
+          {activeTab === "memories" && (
+            <motion.div key="memories" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto">
+              <MemoriesTab />
+            </motion.div>
+          )}
+
+          {activeTab === "creative" && (
+            <motion.div key="creative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto">
+              <CreativeTab />
+            </motion.div>
+          )}
+
+          {activeTab === "history" && (
+            <motion.div key="history" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto">
+              <HistoryTab />
+            </motion.div>
+          )}
+
           {activeTab === "wellness" && (
             <motion.div key="wellness" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto">
               <WellnessTab />
