@@ -1,6 +1,8 @@
 import { FormEvent, useState } from "react";
 import { motion } from "framer-motion";
 import ZentrixLogo from "../ZentrixLogo";
+import { lovable } from "@/integrations/lovable/index";
+import ZentrixLogo from "../ZentrixLogo";
 
 type AuthMode = "login" | "register" | "forgot";
 
@@ -19,6 +21,19 @@ export default function AuthScreen({ mode, setMode, onSubmit, error, locked, cou
   const mins = Math.floor(countdown / 60);
   const secs = countdown % 60;
   const [showPassword, setShowPassword] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const handleGoogle = async () => {
+    setGoogleLoading(true);
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
+    });
+    if (result.error) {
+      setGoogleLoading(false);
+    }
+    if (result.redirected) return;
+    setGoogleLoading(false);
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden">
