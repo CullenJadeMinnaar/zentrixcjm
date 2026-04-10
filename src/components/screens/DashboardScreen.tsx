@@ -9,6 +9,9 @@ import ReportsTab from "./dashboard/ReportsTab";
 import SettingsTab from "./dashboard/SettingsTab";
 import WellnessTab from "./dashboard/WellnessTab";
 import RemindersTab from "./dashboard/RemindersTab";
+import MemoriesTab from "./dashboard/MemoriesTab";
+import HistoryTab from "./dashboard/HistoryTab";
+import CreativeTab from "./dashboard/CreativeTab";
 
 interface Message {
   role: "user" | "assistant";
@@ -33,11 +36,14 @@ interface DashboardScreenProps {
   onLogout: () => void;
 }
 
-type Tab = "ai" | "wellness" | "insights" | "reminders" | "automations" | "reports" | "settings";
+type Tab = "ai" | "memories" | "wellness" | "history" | "creative" | "insights" | "reminders" | "automations" | "reports" | "settings";
 
 const navItems: { id: Tab; label: string; icon: string }[] = [
-  { id: "ai", label: "AI Assistant", icon: "🤖" },
-  { id: "wellness", label: "Wellness", icon: "🧠" },
+  { id: "ai", label: "Morpheus", icon: "🕶️" },
+  { id: "memories", label: "Memory Vault", icon: "🧠" },
+  { id: "creative", label: "Creative Studio", icon: "🎨" },
+  { id: "history", label: "History", icon: "📜" },
+  { id: "wellness", label: "Wellness", icon: "💚" },
   { id: "insights", label: "Insights", icon: "📊" },
   { id: "reminders", label: "Reminders", icon: "🔔" },
   { id: "automations", label: "Automations", icon: "⚡" },
