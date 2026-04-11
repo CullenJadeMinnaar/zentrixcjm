@@ -44,9 +44,13 @@ const Index = () => {
     applyTheme(getSavedTheme());
   }, []);
 
-  // Auth state listener
+  // Auth state listener - check session immediately, then listen for changes
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    let mounted = true;
+
+    // Check existing session first for fast load
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!mounted) return;
       if (session?.user) {
         const { data: profile } = await supabase
           .from("profiles")
@@ -54,11 +58,31 @@ const Index = () => {
           .eq("user_id", session.user.id)
           .single();
 
+        if (!mounted) return;
         setUser({
           name: profile?.display_name || session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "User",
           email: session.user.email || "",
         });
-        // If user is authenticated, go to dashboard (skip paywall for now)
+        setScreen("dashboard");
+        setPlanLabel("Trial");
+      }
+      setInitialLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("user_id", session.user.id)
+          .single();
+
+        if (!mounted) return;
+        setUser({
+          name: profile?.display_name || session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "User",
+          email: session.user.email || "",
+        });
         if (screen === "landing" || screen === "auth") {
           setScreen("dashboard");
           setPlanLabel("Trial");
@@ -72,9 +96,7 @@ const Index = () => {
       setInitialLoading(false);
     });
 
-    supabase.auth.getSession();
-
-    return () => subscription.unsubscribe();
+    return () => { mounted = false; subscription.unsubscribe(); };
   }, []);
 
   // Lock countdown timer
