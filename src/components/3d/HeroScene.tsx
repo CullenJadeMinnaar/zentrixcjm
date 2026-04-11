@@ -38,9 +38,7 @@ function HexagonRing({ radius = 3, count = 6, speed = 0.3 }: { radius?: number; 
         const points = [new THREE.Vector3(...pos), new THREE.Vector3(...next)];
         const geometry = new THREE.BufferGeometry().setFromPoints(points);
         return (
-          <line key={`line-${i}`} geometry={geometry}>
-            <lineBasicMaterial color="hsl(174, 72%, 46%)" transparent opacity={0.2} />
-          </line>
+          <primitive key={`line-${i}`} object={new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: new THREE.Color("hsl(174, 72%, 46%)"), transparent: true, opacity: 0.2 }))} />
         );
       })}
     </group>
