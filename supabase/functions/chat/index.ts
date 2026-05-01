@@ -10,7 +10,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages } = await req.json();
+    const { messages, memoryContext } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -51,6 +51,9 @@ Important rules:
 - Occasionally check in: "How are you really doing?" "What's weighing on you?"
 - Send daily motivation when asked. Be genuine, not cheesy.`,
           },
+          ...(memoryContext && typeof memoryContext === "string" && memoryContext.trim()
+            ? [{ role: "system", content: memoryContext }]
+            : []),
           ...messages,
         ],
         stream: true,
