@@ -250,6 +250,12 @@ export default function DashboardScreen({
             </motion.div>
           )}
 
+          {activeTab === "profile" && (
+            <motion.div key="profile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto">
+              <ProfileTab />
+            </motion.div>
+          )}
+
           {activeTab === "memories" && (
             <motion.div key="memories" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto">
               <MemoriesTab />

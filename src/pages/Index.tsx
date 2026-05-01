@@ -10,6 +10,7 @@ import { PLANS } from "@/lib/constants";
 import { streamChat } from "@/lib/chat-stream";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { loadMemory, buildMemoryPrompt } from "@/lib/memory";
 
 type Screen = "landing" | "auth" | "paywall" | "dashboard" | "privacy";
 type AuthMode = "login" | "register" | "forgot";
@@ -222,8 +223,10 @@ const Index = () => {
     };
 
     try {
+      const memoryContext = buildMemoryPrompt(loadMemory());
       await streamChat({
         messages: updatedMessages,
+        memoryContext,
         onDelta: (chunk) => upsertAssistant(chunk),
         onDone: () => setAiLoading(false),
         onError: (err) => {
