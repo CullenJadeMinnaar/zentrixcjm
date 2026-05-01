@@ -224,6 +224,8 @@ export default function DashboardScreen({
                 <div ref={chatEndRef} />
               </div>
 
+              <MemoryPanel onOpenProfile={() => setActiveTab("profile")} />
+
               <div className="px-6 pt-4 pb-2 border-t border-border/30 flex gap-3 items-end bg-background/30 backdrop-blur-sm">
                 <textarea
                   value={input}
