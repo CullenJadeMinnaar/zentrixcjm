@@ -12,6 +12,8 @@ import RemindersTab from "./dashboard/RemindersTab";
 import MemoriesTab from "./dashboard/MemoriesTab";
 import HistoryTab from "./dashboard/HistoryTab";
 import CreativeTab from "./dashboard/CreativeTab";
+import ProfileTab from "./dashboard/ProfileTab";
+import MemoryPanel from "./dashboard/MemoryPanel";
 
 interface Message {
   role: "user" | "assistant";
@@ -36,10 +38,11 @@ interface DashboardScreenProps {
   onLogout: () => void;
 }
 
-type Tab = "ai" | "memories" | "wellness" | "history" | "creative" | "insights" | "reminders" | "automations" | "reports" | "settings";
+type Tab = "ai" | "profile" | "memories" | "wellness" | "history" | "creative" | "insights" | "reminders" | "automations" | "reports" | "settings";
 
 const navItems: { id: Tab; label: string; icon: string }[] = [
   { id: "ai", label: "Morpheus", icon: "🕶️" },
+  { id: "profile", label: "Profile", icon: "👤" },
   { id: "memories", label: "Memory Vault", icon: "🧠" },
   { id: "creative", label: "Creative Studio", icon: "🎨" },
   { id: "history", label: "History", icon: "📜" },
@@ -148,6 +151,7 @@ export default function DashboardScreen({
             </div>
             <div className="text-[11px] text-muted-foreground mt-0.5">
               {activeTab === "ai" && `Your personal Morpheus · ${planLabel} plan`}
+              {activeTab === "profile" && "Teach Morpheus who you are — saved on this device, forever"}
               {activeTab === "memories" && "People, relationships & emotional context Morpheus remembers"}
               {activeTab === "creative" && "Generate images, memes, stickers & digital art with AI"}
               {activeTab === "history" && "Browse your past conversations & interactions"}
@@ -220,6 +224,8 @@ export default function DashboardScreen({
                 <div ref={chatEndRef} />
               </div>
 
+              <MemoryPanel onOpenProfile={() => setActiveTab("profile")} />
+
               <div className="px-6 pt-4 pb-2 border-t border-border/30 flex gap-3 items-end bg-background/30 backdrop-blur-sm">
                 <textarea
                   value={input}
@@ -243,6 +249,12 @@ export default function DashboardScreen({
               <div className="px-6 pb-3 text-[10px] text-muted-foreground/30">
                 {input.length}/{MAX_INPUT_LENGTH} · Enter to send · Shift+Enter for new line
               </div>
+            </motion.div>
+          )}
+
+          {activeTab === "profile" && (
+            <motion.div key="profile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto">
+              <ProfileTab />
             </motion.div>
           )}
 
