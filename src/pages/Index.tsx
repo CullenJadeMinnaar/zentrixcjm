@@ -22,17 +22,24 @@ interface User {
   email: string;
 }
 
+const USER_CACHE_KEY = "zentrix_user";
+const PLAN_CACHE_KEY = "zentrix_plan";
+
 const Index = () => {
-  const [screen, setScreen] = useState<Screen>("landing");
+  // ⚡ Hydrate instantly from localStorage so the dashboard appears with no flash
+  const cachedUserRaw = typeof window !== "undefined" ? localStorage.getItem(USER_CACHE_KEY) : null;
+  const cachedUser: User | null = cachedUserRaw ? (() => { try { return JSON.parse(cachedUserRaw); } catch { return null; } })() : null;
+  const cachedPlan = typeof window !== "undefined" ? localStorage.getItem(PLAN_CACHE_KEY) : null;
+
+  const [screen, setScreen] = useState<Screen>(cachedUser ? "dashboard" : "landing");
   const [authMode, setAuthMode] = useState<AuthMode>("login");
-  const [user, setUser] = useState<User | null>(null);
-  const [planLabel, setPlanLabel] = useState("");
+  const [user, setUser] = useState<User | null>(cachedUser);
+  const [planLabel, setPlanLabel] = useState(cachedPlan || (cachedUser ? "Trial" : ""));
   const [authError, setAuthError] = useState("");
   const [authLocked, setAuthLocked] = useState(false);
   const [lockCountdown, setLockCountdown] = useState(0);
   const [authLoading, setAuthLoading] = useState(false);
   const [payError, setPayError] = useState("");
-  const [initialLoading, setInitialLoading] = useState(true);
   const [aiMessages, setAiMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([
     { role: "assistant", content: "Hey! 👋 I'm **ZENTRIX** — think of me as your personal Morpheus. I'm part AI assistant, part life coach, part therapist, part best friend.\n\nI'm here to help you **think clearer**, **feel better**, and **move smarter**. Whether you need to vent, strategize, or just have someone to talk to — I'm always here.\n\nWhat's on your mind today?" },
   ]);
@@ -40,67 +47,60 @@ const Index = () => {
   const [aiLoading, setAiLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null!);
 
-  // Apply saved theme
-  useEffect(() => {
-    applyTheme(getSavedTheme());
-  }, []);
+  // Theme
+  useEffect(() => { applyTheme(getSavedTheme()); }, []);
 
-  // Auth state listener - check session immediately, then listen for changes
+  // Background session validation (non-blocking)
   useEffect(() => {
     let mounted = true;
 
-    // Check existing session first for fast load
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!mounted) return;
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("display_name")
-          .eq("user_id", session.user.id)
-          .single();
+      if (!session?.user) {
+        // No valid session → clear cache and bounce to landing
+        localStorage.removeItem(USER_CACHE_KEY);
+        localStorage.removeItem(PLAN_CACHE_KEY);
+        setUser(null);
+        setPlanLabel("");
+        setScreen((s) => (s === "dashboard" ? "landing" : s));
+        return;
+      }
 
-        if (!mounted) return;
-        setUser({
-          name: profile?.display_name || session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "User",
-          email: session.user.email || "",
-        });
-        setScreen("dashboard");
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("user_id", session.user.id)
+        .single();
+
+      if (!mounted) return;
+      const next: User = {
+        name: profile?.display_name || session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "User",
+        email: session.user.email || "",
+      };
+      setUser(next);
+      localStorage.setItem(USER_CACHE_KEY, JSON.stringify(next));
+      if (!localStorage.getItem(PLAN_CACHE_KEY)) {
+        localStorage.setItem(PLAN_CACHE_KEY, "Trial");
         setPlanLabel("Trial");
       }
-      setInitialLoading(false);
+      setScreen((s) => (s === "landing" || s === "auth" ? "dashboard" : s));
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return;
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("display_name")
-          .eq("user_id", session.user.id)
-          .single();
-
-        if (!mounted) return;
-        setUser({
-          name: profile?.display_name || session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "User",
-          email: session.user.email || "",
-        });
-        if (screen === "landing" || screen === "auth") {
-          setScreen("dashboard");
-          setPlanLabel("Trial");
-        }
-      } else {
+      if (!session?.user) {
+        localStorage.removeItem(USER_CACHE_KEY);
+        localStorage.removeItem(PLAN_CACHE_KEY);
         setUser(null);
-        if (screen === "dashboard") {
-          setScreen("landing");
-        }
+        setPlanLabel("");
+        setScreen((s) => (s === "dashboard" ? "landing" : s));
       }
-      setInitialLoading(false);
     });
 
     return () => { mounted = false; subscription.unsubscribe(); };
   }, []);
 
-  // Lock countdown timer
+  // Lock countdown
   useEffect(() => {
     if (!authLocked) return;
     const t = setInterval(() => {
@@ -133,18 +133,12 @@ const Index = () => {
           redirectTo: `${window.location.origin}/reset-password`,
         });
         setAuthLoading(false);
-        if (error) {
-          setAuthError(error.message);
-        } else {
-          toast.success("Check your email for a password reset link.");
-          setAuthMode("login");
-        }
+        if (error) setAuthError(error.message);
+        else { toast.success("Check your email for a password reset link."); setAuthMode("login"); }
         return;
       }
 
-      if (!validatePassword(password)) {
-        setAuthError("Password must be 8–128 characters."); return;
-      }
+      if (!validatePassword(password)) { setAuthError("Password must be 8–128 characters."); return; }
 
       const result = authLimiter.check(email);
       if (result.blocked) {
@@ -168,19 +162,25 @@ const Index = () => {
           },
         });
         setAuthLoading(false);
-        if (error) {
-          setAuthError(error.message);
-        } else {
-          toast.success("Check your email to verify your account, then sign in.");
-          setAuthMode("login");
-        }
+        if (error) setAuthError(error.message);
+        else { toast.success("Check your email to verify your account, then sign in."); setAuthMode("login"); }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error, data } = await supabase.auth.signInWithPassword({ email, password });
         setAuthLoading(false);
         if (error) {
           setAuthError(error.message);
+        } else if (data.user) {
+          // ⚡ Optimistic instant transition
+          const newUser: User = {
+            name: data.user.user_metadata?.full_name || email.split("@")[0],
+            email,
+          };
+          setUser(newUser);
+          setPlanLabel("Trial");
+          setScreen("dashboard");
+          localStorage.setItem(USER_CACHE_KEY, JSON.stringify(newUser));
+          localStorage.setItem(PLAN_CACHE_KEY, "Trial");
         }
-        // onAuthStateChange will handle navigation
       }
     },
     [authMode]
@@ -190,11 +190,14 @@ const Index = () => {
     const selected = PLANS.find((p) => p.id === planId);
     if (!selected) { setPayError("Invalid plan selected."); return; }
     setPlanLabel(selected.label);
+    localStorage.setItem(PLAN_CACHE_KEY, selected.label);
     setScreen("dashboard");
   };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    localStorage.removeItem(USER_CACHE_KEY);
+    localStorage.removeItem(PLAN_CACHE_KEY);
     setUser(null);
     setPlanLabel("");
     setScreen("landing");
@@ -229,10 +232,7 @@ const Index = () => {
         memoryContext,
         onDelta: (chunk) => upsertAssistant(chunk),
         onDone: () => setAiLoading(false),
-        onError: (err) => {
-          toast.error(err);
-          setAiLoading(false);
-        },
+        onError: (err) => { toast.error(err); setAiLoading(false); },
       });
     } catch (e) {
       console.error(e);
@@ -240,17 +240,6 @@ const Index = () => {
       setAiLoading(false);
     }
   };
-
-  if (initialLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm text-muted-foreground">Loading ZENTRIX...</span>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
