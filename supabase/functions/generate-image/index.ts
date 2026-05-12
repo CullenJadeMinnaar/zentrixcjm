@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,16 +7,35 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // --- Auth check ---
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const jwt = authHeader.replace("Bearer ", "").trim();
+    if (!jwt) return json({ error: "Unauthorized" }, 401);
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: `Bearer ${jwt}` } } },
+    );
+    const { data: { user }, error: userErr } = await supabase.auth.getUser(jwt);
+    if (userErr || !user) return json({ error: "Unauthorized" }, 401);
+
     const { prompt, style } = await req.json();
-    if (!prompt || typeof prompt !== "string") {
-      return new Response(JSON.stringify({ error: "Prompt is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0 || prompt.length > 1000) {
+      return json({ error: "Prompt is required and must be 1-1000 characters" }, 400);
+    }
+    if (style !== undefined && (typeof style !== "string" || style.length > 32)) {
+      return json({ error: "Invalid style" }, 400);
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -29,7 +49,7 @@ serve(async (req) => {
       logo: "minimal logo design, clean vector style, professional",
     };
 
-    const enhancedPrompt = `${prompt}. Style: ${stylePrompts[style] || stylePrompts.photo}`;
+    const enhancedPrompt = `${prompt}. Style: ${stylePrompts[style as string] || stylePrompts.photo}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -45,44 +65,20 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limited. Please try again shortly." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      if (response.status === 429) return json({ error: "Rate limited. Please try again shortly." }, 429);
+      if (response.status === 402) return json({ error: "AI credits exhausted." }, 402);
       const t = await response.text();
       console.error("Image generation error:", response.status, t);
-      return new Response(JSON.stringify({ error: "Image generation failed" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return json({ error: "Image generation failed" }, 500);
     }
 
     const data = await response.json();
     const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    if (!imageUrl) return json({ error: "No image generated" }, 500);
 
-    if (!imageUrl) {
-      return new Response(JSON.stringify({ error: "No image generated" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    return new Response(JSON.stringify({ image: imageUrl }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return json({ image: imageUrl });
   } catch (e) {
     console.error("generate-image error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return json({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
   }
 });
