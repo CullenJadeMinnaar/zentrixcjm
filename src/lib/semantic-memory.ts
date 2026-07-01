@@ -84,15 +84,15 @@ export async function listSemanticMemories(opts: { archived?: boolean } = {}): P
 }
 
 export async function togglePinMemory(id: string, pinned: boolean) {
-  await supabase.from("semantic_memories" as never).update({ pinned }).eq("id", id);
+  await (supabase.from("semantic_memories" as never) as any).update({ pinned }).eq("id", id);
 }
 
 export async function archiveMemory(id: string, archived = true) {
-  await supabase.from("semantic_memories" as never).update({ archived }).eq("id", id);
+  await (supabase.from("semantic_memories" as never) as any).update({ archived }).eq("id", id);
 }
 
 export async function deleteSemanticMemory(id: string) {
-  await supabase.from("semantic_memories" as never).delete().eq("id", id);
+  await (supabase.from("semantic_memories" as never) as any).delete().eq("id", id);
 }
 
 /**
