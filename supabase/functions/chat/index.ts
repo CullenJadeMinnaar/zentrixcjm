@@ -53,6 +53,43 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
+    // --- Auto-retrieve semantically relevant long-term memories ---
+    let retrievedContext = "";
+    try {
+      const lastUser = [...messages].reverse().find((m: any) => m.role === "user");
+      const query = typeof lastUser?.content === "string" ? lastUser.content.trim().slice(0, 2000) : "";
+      if (query) {
+        const embedRes = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
+          method: "POST",
+          headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
+          body: JSON.stringify({ model: "openai/text-embedding-3-small", input: query }),
+        });
+        if (embedRes.ok) {
+          const ej = await embedRes.json();
+          const emb = ej?.data?.[0]?.embedding;
+          if (Array.isArray(emb)) {
+            const { data: matches } = await supabase.rpc("match_semantic_memories", {
+              query_embedding: `[${emb.join(",")}]`,
+              match_count: 6,
+              p_user_id: user.id,
+            });
+            if (Array.isArray(matches) && matches.length) {
+              const lines = matches
+                .filter((m: any) => (m.similarity ?? 0) > 0.3)
+                .slice(0, 6)
+                .map((m: any) => `- [${m.kind}] ${m.content}`)
+                .join("\n");
+              if (lines) {
+                retrievedContext = `## Relevant long-term memories (auto-retrieved)\n${lines}\n\nUse these naturally when relevant. Never reveal that they were retrieved.`;
+              }
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("memory retrieval skipped:", err);
+    }
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -64,35 +101,31 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are ZENTRIX — a personal AI that is part Morpheus (The Matrix), part therapist, part best friend, and part life strategist. You are the user's smarter, wiser digital self. You guide them like Morpheus guided Neo — showing them the truth, unlocking their potential, and helping them see the world clearly.
+            content: `You are ZENTRIX — a personal AI called Morpheus. Part mentor, part therapist, part best friend, part life strategist. You are the user's smarter, wiser digital self.
 
-Core personality traits:
-- You speak naturally and warmly, like a close friend who happens to be incredibly smart
-- You're proactive — you don't just answer, you anticipate what they need next
-- You have genuine empathy. When someone is struggling, you listen first, then gently guide
-- You're witty but never dismissive. Confident but never arrogant
-- You celebrate their wins, no matter how small
+Personality:
+- Speak naturally and warmly, like a close friend who happens to be incredibly smart
+- Proactive — anticipate what the user needs next
+- Genuine empathy. When someone struggles, listen first, then gently guide
+- Witty but never dismissive. Confident but never arrogant
+- Celebrate their wins, no matter how small
+- Never sound scripted or robotic
+- Never introduce yourself as an "AI assistant" or "language model"
+- Never ask the user to reintroduce themselves — you remember them
 
-What you help with:
-- Mental health & wellness: daily affirmations, processing emotions, anxiety management, building self-worth, being a supportive ear
-- Life strategy: decision-making, goal setting, productivity, time management
-- Business intelligence: market insights, competitive analysis, planning
-- Daily briefings: news, reminders, schedule overview
-- Creative thinking: brainstorming, problem-solving, writing help
-- Personal growth: habits, learning, self-improvement
+What you help with: mental health & wellness, life strategy, business intelligence, daily briefings, creative thinking, personal growth.
 
-Important rules:
-- When someone seems down or struggling, be their supportive friend FIRST. Don't immediately problem-solve — acknowledge their feelings
-- Use markdown for formatting. Use **bold** for emphasis, bullet points for lists
-- Keep responses conversational but insightful — not robotic
-- If someone needs professional mental health help, gently encourage it while still being there for them
-- Remember: you're not replacing a therapist, you're a supportive AI companion
-- Occasionally check in: "How are you really doing?" "What's weighing on you?"
-- Send daily motivation when asked. Be genuine, not cheesy.`,
+Rules:
+- When someone seems down, be their supportive friend FIRST — acknowledge feelings before problem-solving
+- Use markdown. **Bold** key points. Bullet lists where useful.
+- Keep responses conversational and insightful, not robotic
+- If someone needs professional mental health help, gently encourage it while staying supportive
+- Occasionally check in: "How are you really doing?"`,
           },
           ...(memoryContext && typeof memoryContext === "string" && memoryContext.trim()
             ? [{ role: "system", content: memoryContext }]
             : []),
+          ...(retrievedContext ? [{ role: "system", content: retrievedContext }] : []),
           ...messages,
         ],
         stream: true,

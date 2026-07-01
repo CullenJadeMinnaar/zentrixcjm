@@ -145,12 +145,70 @@ export type Database = {
         }
         Relationships: []
       }
+      semantic_memories: {
+        Row: {
+          archived: boolean
+          content: string
+          created_at: string
+          embedding: string | null
+          id: string
+          importance: number
+          kind: string
+          metadata: Json
+          pinned: boolean
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archived?: boolean
+          content: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          importance?: number
+          kind?: string
+          metadata?: Json
+          pinned?: boolean
+          source?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          archived?: boolean
+          content?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          importance?: number
+          kind?: string
+          metadata?: Json
+          pinned?: boolean
+          source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      match_semantic_memories: {
+        Args: {
+          match_count?: number
+          p_user_id?: string
+          query_embedding: string
+        }
+        Returns: {
+          content: string
+          id: string
+          importance: number
+          kind: string
+          similarity: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
