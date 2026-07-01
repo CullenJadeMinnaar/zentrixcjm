@@ -71,7 +71,6 @@ serve(async (req) => {
             const { data: matches } = await supabase.rpc("match_semantic_memories", {
               query_embedding: `[${emb.join(",")}]`,
               match_count: 6,
-              p_user_id: user.id,
             });
             if (Array.isArray(matches) && matches.length) {
               const lines = matches

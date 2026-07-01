@@ -56,7 +56,6 @@ serve(async (req) => {
     const { data, error } = await supabase.rpc("match_semantic_memories", {
       query_embedding: `[${embedding.join(",")}]`,
       match_count: k,
-      p_user_id: user.id,
     });
     if (error) {
       console.error("rpc error", error);
