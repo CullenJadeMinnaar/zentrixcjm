@@ -196,11 +196,7 @@ export type Database = {
     }
     Functions: {
       match_semantic_memories: {
-        Args: {
-          match_count?: number
-          p_user_id?: string
-          query_embedding: string
-        }
+        Args: { match_count?: number; query_embedding: string }
         Returns: {
           content: string
           id: string
