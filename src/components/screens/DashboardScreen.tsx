@@ -329,6 +329,25 @@ export default function DashboardScreen({
               <SettingsTab user={user} onLogout={onLogout} />
             </motion.div>
           )}
+
+          {activeTab === "voice" && (
+            <motion.div key="voice" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto"><VoiceTab /></motion.div>
+          )}
+          {activeTab === "tasks" && (
+            <motion.div key="tasks" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto"><TasksTab /></motion.div>
+          )}
+          {activeTab === "habits" && (
+            <motion.div key="habits" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto"><HabitsTab /></motion.div>
+          )}
+          {activeTab === "journal" && (
+            <motion.div key="journal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto"><JournalTab /></motion.div>
+          )}
+          {activeTab === "goals" && (
+            <motion.div key="goals" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto"><GoalsTab /></motion.div>
+          )}
+          {activeTab === "calendar" && (
+            <motion.div key="calendar" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto"><CalendarTab /></motion.div>
+          )}
         </AnimatePresence>
       </main>
     </div>
