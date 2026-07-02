@@ -14,6 +14,12 @@ import HistoryTab from "./dashboard/HistoryTab";
 import CreativeTab from "./dashboard/CreativeTab";
 import ProfileTab from "./dashboard/ProfileTab";
 import MemoryPanel from "./dashboard/MemoryPanel";
+import TasksTab from "./dashboard/TasksTab";
+import HabitsTab from "./dashboard/HabitsTab";
+import JournalTab from "./dashboard/JournalTab";
+import GoalsTab from "./dashboard/GoalsTab";
+import CalendarTab from "./dashboard/CalendarTab";
+import VoiceTab from "./dashboard/VoiceTab";
 
 interface Message {
   role: "user" | "assistant";
@@ -38,17 +44,23 @@ interface DashboardScreenProps {
   onLogout: () => void;
 }
 
-type Tab = "ai" | "profile" | "memories" | "wellness" | "history" | "creative" | "insights" | "reminders" | "automations" | "reports" | "settings";
+type Tab = "ai" | "profile" | "memories" | "wellness" | "history" | "creative" | "insights" | "reminders" | "automations" | "reports" | "settings" | "tasks" | "habits" | "journal" | "goals" | "calendar" | "voice";
 
 const navItems: { id: Tab; label: string; icon: string }[] = [
   { id: "ai", label: "Morpheus", icon: "🕶️" },
+  { id: "voice", label: "Voice", icon: "🎙" },
   { id: "profile", label: "Profile", icon: "👤" },
   { id: "memories", label: "Memory Vault", icon: "🧠" },
   { id: "creative", label: "Creative Studio", icon: "🎨" },
+  { id: "tasks", label: "Tasks", icon: "✅" },
+  { id: "habits", label: "Habits", icon: "🌱" },
+  { id: "journal", label: "Journal", icon: "📔" },
+  { id: "goals", label: "Goals", icon: "🎯" },
+  { id: "calendar", label: "Calendar", icon: "📅" },
+  { id: "reminders", label: "Reminders", icon: "🔔" },
   { id: "history", label: "History", icon: "📜" },
   { id: "wellness", label: "Wellness", icon: "💚" },
   { id: "insights", label: "Insights", icon: "📊" },
-  { id: "reminders", label: "Reminders", icon: "🔔" },
   { id: "automations", label: "Automations", icon: "⚡" },
   { id: "reports", label: "Reports", icon: "📈" },
   { id: "settings", label: "Settings", icon: "⚙️" },
@@ -151,9 +163,15 @@ export default function DashboardScreen({
             </div>
             <div className="text-[11px] text-muted-foreground mt-0.5">
               {activeTab === "ai" && `Your personal Morpheus · ${planLabel} plan`}
+              {activeTab === "voice" && "Talk to Morpheus, hear him back — voice powered by AI"}
               {activeTab === "profile" && "Teach Morpheus who you are — saved on this device, forever"}
               {activeTab === "memories" && "People, relationships & emotional context Morpheus remembers"}
               {activeTab === "creative" && "Generate images, memes, stickers & digital art with AI"}
+              {activeTab === "tasks" && "Everything on your plate — organized, prioritized, done"}
+              {activeTab === "habits" && "Small daily actions that compound into a great life"}
+              {activeTab === "journal" && "A private space to think, feel and reflect"}
+              {activeTab === "goals" && "The big things you're moving toward — with real progress"}
+              {activeTab === "calendar" && "Your schedule at a glance"}
               {activeTab === "history" && "Browse your past conversations & interactions"}
               {activeTab === "wellness" && "Daily affirmations, mood tracking & self-care"}
               {activeTab === "insights" && "Curated intelligence, updated in real-time"}
