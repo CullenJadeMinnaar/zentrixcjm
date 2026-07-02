@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      calendar_events: {
+        Row: {
+          all_day: boolean
+          color: string | null
+          created_at: string
+          description: string | null
+          ends_at: string
+          id: string
+          location: string | null
+          starts_at: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          all_day?: boolean
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          ends_at: string
+          id?: string
+          location?: string | null
+          starts_at: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          all_day?: boolean
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          ends_at?: string
+          id?: string
+          location?: string | null
+          starts_at?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           content: string
@@ -71,6 +113,152 @@ export type Database = {
           id?: string
           summary?: string | null
           title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      goals: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          progress: number
+          status: string
+          target_date: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          progress?: number
+          status?: string
+          target_date?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          progress?: number
+          status?: string
+          target_date?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      habit_checkins: {
+        Row: {
+          checkin_date: string
+          created_at: string
+          habit_id: string
+          id: string
+          note: string | null
+          user_id: string
+        }
+        Insert: {
+          checkin_date?: string
+          created_at?: string
+          habit_id: string
+          id?: string
+          note?: string | null
+          user_id: string
+        }
+        Update: {
+          checkin_date?: string
+          created_at?: string
+          habit_id?: string
+          id?: string
+          note?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_checkins_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      habits: {
+        Row: {
+          archived: boolean
+          cadence: string
+          color: string | null
+          created_at: string
+          id: string
+          name: string
+          target_per_period: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archived?: boolean
+          cadence?: string
+          color?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          target_per_period?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          archived?: boolean
+          cadence?: string
+          color?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          target_per_period?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      journal_entries: {
+        Row: {
+          content: string
+          created_at: string
+          entry_date: string
+          id: string
+          mood: string | null
+          tags: string[]
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          entry_date?: string
+          id?: string
+          mood?: string | null
+          tags?: string[]
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          entry_date?: string
+          id?: string
+          mood?: string | null
+          tags?: string[]
+          title?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -145,6 +333,45 @@ export type Database = {
         }
         Relationships: []
       }
+      reminders: {
+        Row: {
+          active: boolean
+          body: string | null
+          created_at: string
+          id: string
+          last_fired_at: string | null
+          recurrence: string
+          remind_at: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          body?: string | null
+          created_at?: string
+          id?: string
+          last_fired_at?: string | null
+          recurrence?: string
+          remind_at: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          body?: string | null
+          created_at?: string
+          id?: string
+          last_fired_at?: string | null
+          recurrence?: string
+          remind_at?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       semantic_memories: {
         Row: {
           archived: boolean
@@ -185,6 +412,48 @@ export type Database = {
           metadata?: Json
           pinned?: boolean
           source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          due_at: string | null
+          id: string
+          notes: string | null
+          priority: string
+          status: string
+          tags: string[]
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          status?: string
+          tags?: string[]
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          status?: string
+          tags?: string[]
+          title?: string
           updated_at?: string
           user_id?: string
         }
