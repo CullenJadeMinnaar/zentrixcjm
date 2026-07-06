@@ -20,6 +20,7 @@ import JournalTab from "./dashboard/JournalTab";
 import GoalsTab from "./dashboard/GoalsTab";
 import CalendarTab from "./dashboard/CalendarTab";
 import VoiceTab from "./dashboard/VoiceTab";
+import NotificationsTab from "./dashboard/NotificationsTab";
 
 interface Message {
   role: "user" | "assistant";
@@ -44,7 +45,7 @@ interface DashboardScreenProps {
   onLogout: () => void;
 }
 
-type Tab = "ai" | "profile" | "memories" | "wellness" | "history" | "creative" | "insights" | "reminders" | "automations" | "reports" | "settings" | "tasks" | "habits" | "journal" | "goals" | "calendar" | "voice";
+type Tab = "ai" | "profile" | "memories" | "wellness" | "history" | "creative" | "insights" | "reminders" | "automations" | "reports" | "settings" | "tasks" | "habits" | "journal" | "goals" | "calendar" | "voice" | "notifications";
 
 const navItems: { id: Tab; label: string; icon: string }[] = [
   { id: "ai", label: "Morpheus", icon: "🕶️" },
@@ -62,7 +63,8 @@ const navItems: { id: Tab; label: string; icon: string }[] = [
   { id: "wellness", label: "Wellness", icon: "💚" },
   { id: "insights", label: "Insights", icon: "📊" },
   { id: "automations", label: "Automations", icon: "⚡" },
-  { id: "reports", label: "Reports", icon: "📈" },
+  { id: "reports", label: "Analytics", icon: "📈" },
+  { id: "notifications", label: "Notifications", icon: "🔔" },
   { id: "settings", label: "Settings", icon: "⚙️" },
 ];
 
@@ -177,7 +179,8 @@ export default function DashboardScreen({
               {activeTab === "insights" && "Curated intelligence, updated in real-time"}
               {activeTab === "reminders" && "Never miss a thing — ZENTRIX keeps you on track"}
               {activeTab === "automations" && "Automated workflows running in the background"}
-              {activeTab === "reports" && "Performance metrics and activity logs"}
+              {activeTab === "reports" && "Real-time analytics across your ZENTRIX activity"}
+              {activeTab === "notifications" && "Browser notifications, daily briefings & smart nudges"}
               {activeTab === "settings" && "Customize your ZENTRIX experience"}
             </div>
           </div>
@@ -347,6 +350,9 @@ export default function DashboardScreen({
           )}
           {activeTab === "calendar" && (
             <motion.div key="calendar" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto"><CalendarTab /></motion.div>
+          )}
+          {activeTab === "notifications" && (
+            <motion.div key="notifications" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto"><NotificationsTab /></motion.div>
           )}
         </AnimatePresence>
       </main>

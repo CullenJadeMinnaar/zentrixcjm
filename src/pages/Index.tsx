@@ -11,6 +11,7 @@ import { streamChat } from "@/lib/chat-stream";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { loadMemory, buildMemoryPrompt } from "@/lib/memory";
+import { startNotificationLoop, stopNotificationLoop, notificationsPermission } from "@/lib/notifications";
 
 type Screen = "landing" | "auth" | "paywall" | "dashboard" | "privacy";
 type AuthMode = "login" | "register" | "forgot";
