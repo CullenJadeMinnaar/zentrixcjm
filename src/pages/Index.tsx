@@ -51,6 +51,13 @@ const Index = () => {
   // Theme
   useEffect(() => { applyTheme(getSavedTheme()); }, []);
 
+  // Start notification loop when signed in and permission is granted
+  useEffect(() => {
+    if (!user) { stopNotificationLoop(); return; }
+    if (notificationsPermission() === "granted") startNotificationLoop();
+    return () => stopNotificationLoop();
+  }, [user]);
+
   // Background session validation (non-blocking)
   useEffect(() => {
     let mounted = true;
