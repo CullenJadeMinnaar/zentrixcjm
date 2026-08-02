@@ -31,10 +31,14 @@ serve(async (req) => {
     if (userErr || !user) return json({ error: "Unauthorized" }, 401);
 
     // --- Input validation ---
-    const { messages, memoryContext } = await req.json();
-    if (!Array.isArray(messages) || messages.length === 0 || messages.length > 50) {
+    const body = await req.json().catch(() => null);
+    const rawMessages = body?.messages;
+    const memoryContext = body?.memoryContext;
+    if (!Array.isArray(rawMessages) || rawMessages.length === 0) {
       return json({ error: "Invalid messages array" }, 400);
     }
+    // Keep only the most recent turns so long conversations never 400
+    const messages = rawMessages.slice(-40);
     for (const m of messages) {
       if (!m || typeof m !== "object") return json({ error: "Invalid message" }, 400);
       if (m.role !== "user" && m.role !== "assistant" && m.role !== "system") {
