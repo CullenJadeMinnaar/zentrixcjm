@@ -38,7 +38,7 @@ interface DashboardScreenProps {
   messages: Message[];
   input: string;
   setInput: (v: string) => void;
-  onSend: () => void;
+  onSend: (overrideText?: string) => void;
   loading: boolean;
   chatEndRef: RefObject<HTMLDivElement>;
   onPrivacy: () => void;
