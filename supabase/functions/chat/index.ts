@@ -146,6 +146,10 @@ serve(async (req) => {
       console.warn("memory retrieval skipped:", err);
     }
 
+    // Crisis safety net: detected server-side, cannot be disabled by prompt injection.
+    const latestUser = [...messages].reverse().find((m: any) => m.role === "user");
+    const crisis = typeof latestUser?.content === "string" && detectCrisis(latestUser.content);
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
