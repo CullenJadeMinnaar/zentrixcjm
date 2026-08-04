@@ -196,7 +196,15 @@ Rules:
       return json({ error: "AI gateway error" }, 500);
     }
 
-    return new Response(response.body, {
+    // Crisis safety net: prepend fixed SA crisis resources regardless of model output.
+    const latestUser = [...messages].reverse().find((m: any) => m.role === "user");
+    const crisis = typeof latestUser?.content === "string" && detectCrisis(latestUser.content);
+
+    const stream = crisis && response.body
+      ? ssePrefixStream(CRISIS_MESSAGE, response.body)
+      : response.body;
+
+    return new Response(stream, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (e) {
