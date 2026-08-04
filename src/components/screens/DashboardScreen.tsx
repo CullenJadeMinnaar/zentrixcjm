@@ -260,7 +260,7 @@ export default function DashboardScreen({
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={onSend}
+                  onClick={() => onSend()}
                   disabled={loading || !input.trim()}
                   className="bg-primary text-primary-foreground rounded-lg px-6 py-3 text-sm font-semibold hover:brightness-110 transition-all disabled:opacity-40"
                 >
@@ -299,7 +299,7 @@ export default function DashboardScreen({
 
           {activeTab === "wellness" && (
             <motion.div key="wellness" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto">
-              <WellnessTab />
+              <WellnessTab onQuickPrompt={(p) => { setActiveTab("ai"); onSend(p); }} />
             </motion.div>
           )}
 

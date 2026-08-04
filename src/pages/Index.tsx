@@ -231,9 +231,10 @@ const Index = () => {
     setScreen("landing");
   };
 
-  const handleSendMessage = async () => {
-    const clean = sanitize(input);
+  const handleSendMessage = async (overrideText?: string) => {
+    const clean = sanitize(typeof overrideText === "string" ? overrideText : input);
     if (!clean || aiLoading) return;
+
 
     const userMsg = { role: "user" as const, content: clean };
     const updatedMessages = [...aiMessages, userMsg];
