@@ -80,6 +80,13 @@ const Index = () => {
         .eq("user_id", session.user.id)
         .single();
 
+      // Plan entitlement is server-authoritative — never trust localStorage
+      const { data: subscription } = await supabase
+        .from("subscriptions")
+        .select("plan_label")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+
       if (!mounted) return;
       const next: User = {
         name: profile?.display_name || session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "User",
@@ -87,10 +94,9 @@ const Index = () => {
       };
       setUser(next);
       localStorage.setItem(USER_CACHE_KEY, JSON.stringify(next));
-      if (!localStorage.getItem(PLAN_CACHE_KEY)) {
-        localStorage.setItem(PLAN_CACHE_KEY, "Trial");
-        setPlanLabel("Trial");
-      }
+      const serverPlan = subscription?.plan_label || "Trial";
+      setPlanLabel(serverPlan);
+      localStorage.setItem(PLAN_CACHE_KEY, serverPlan);
       setScreen((s) => (s === "landing" || s === "auth" ? "dashboard" : s));
     });
 
