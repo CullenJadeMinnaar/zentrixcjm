@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const dailyQuotes = [
   { text: "You are enough. You have always been enough.", author: "Self-Worth" },
@@ -31,29 +33,74 @@ const wellnessActivities = [
   { icon: "🌙", name: "Sleep Prep", desc: "Screen-free wind down ritual", duration: "15 min" },
 ];
 
+const quickPrompts = [
+  "I'm feeling overwhelmed today",
+  "Help me process my thoughts",
+  "I need motivation right now",
+  "Let's do a gratitude exercise",
+  "Talk me through anxiety",
+];
+
 interface MoodEntry {
+  id: string;
   mood: number;
-  time: string;
-  note: string;
+  note: string | null;
+  created_at: string;
 }
 
-export default function WellnessTab() {
+interface WellnessTabProps {
+  onQuickPrompt?: (prompt: string) => void;
+}
+
+export default function WellnessTab({ onQuickPrompt }: WellnessTabProps) {
   const [currentQuote, setCurrentQuote] = useState(0);
   const [todayMood, setTodayMood] = useState<number | null>(null);
   const [moodNote, setMoodNote] = useState("");
   const [moodHistory, setMoodHistory] = useState<MoodEntry[]>([]);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setCurrentQuote(Math.floor(Math.random() * dailyQuotes.length));
+    void loadHistory();
   }, []);
 
-  const logMood = (value: number) => {
+  const loadHistory = async () => {
+    const { data, error } = await supabase
+      .from("mood_checkins")
+      .select("id, mood, note, created_at")
+      .order("created_at", { ascending: false })
+      .limit(10);
+    if (error) return;
+    const rows = (data ?? []) as MoodEntry[];
+    setMoodHistory(rows);
+    const today = new Date().toDateString();
+    const latestToday = rows.find((r) => new Date(r.created_at).toDateString() === today);
+    if (latestToday) setTodayMood(latestToday.mood);
+  };
+
+  const logMood = async (value: number) => {
+    if (saving) return;
+    setSaving(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Please sign in to save your mood");
+      setSaving(false);
+      return;
+    }
+    const { data, error } = await supabase
+      .from("mood_checkins")
+      .insert({ user_id: user.id, mood: value, note: moodNote.trim() || null })
+      .select("id, mood, note, created_at")
+      .single();
+    setSaving(false);
+    if (error) {
+      toast.error("Couldn't save your check-in");
+      return;
+    }
     setTodayMood(value);
-    setMoodHistory(prev => [
-      { mood: value, time: new Date().toLocaleTimeString(), note: moodNote },
-      ...prev,
-    ]);
+    setMoodHistory((prev) => [data as MoodEntry, ...prev].slice(0, 10));
     setMoodNote("");
+    toast.success("Mood logged");
   };
 
   const quote = dailyQuotes[currentQuote];
@@ -103,8 +150,9 @@ export default function WellnessTab() {
               key={mood.value}
               whileHover={{ scale: 1.15 }}
               whileTap={{ scale: 0.95 }}
+              disabled={saving}
               onClick={() => logMood(mood.value)}
-              className={`flex flex-col items-center gap-1.5 p-3 rounded-lg transition-all ${
+              className={`flex flex-col items-center gap-1.5 p-3 rounded-lg transition-all disabled:opacity-60 ${
                 todayMood === mood.value
                   ? "bg-primary/10 border border-primary/30 ring-2 ring-primary/20"
                   : "hover:bg-secondary border border-transparent"
@@ -116,6 +164,14 @@ export default function WellnessTab() {
           ))}
         </div>
 
+        <input
+          value={moodNote}
+          onChange={(e) => setMoodNote(e.target.value)}
+          maxLength={280}
+          placeholder="Add a note (optional) — then pick a mood"
+          className="w-full px-4 py-2.5 rounded-lg bg-secondary/50 border border-border text-sm focus:outline-none focus:border-primary/40 transition-colors"
+        />
+
         {todayMood && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
@@ -123,12 +179,32 @@ export default function WellnessTab() {
             className="mt-4 pt-4 border-t border-border"
           >
             <p className="text-sm text-primary mb-2">
-              ✓ Mood logged — {moodOptions.find(m => m.value === todayMood)?.label}
+              ✓ Mood saved — {moodOptions.find(m => m.value === todayMood)?.label}
             </p>
-            <p className="text-xs text-muted-foreground">
-              Tip: Go to your AI Assistant and say "I'm feeling {moodOptions.find(m => m.value === todayMood)?.label?.toLowerCase()}" — ZENTRIX will talk it through with you like a friend.
-            </p>
+            <button
+              onClick={() => onQuickPrompt?.(`I'm feeling ${moodOptions.find(m => m.value === todayMood)?.label?.toLowerCase()} today`)}
+              className="text-xs text-primary hover:text-primary/80 transition-colors"
+            >
+              Talk it through with ZENTRIX →
+            </button>
           </motion.div>
+        )}
+
+        {moodHistory.length > 0 && (
+          <div className="mt-5 pt-4 border-t border-border">
+            <p className="text-[11px] uppercase tracking-[3px] text-muted-foreground mb-3">Recent check-ins</p>
+            <div className="space-y-1.5">
+              {moodHistory.map((m) => (
+                <div key={m.id} className="flex items-center gap-3 text-sm">
+                  <span className="text-lg">{moodOptions.find(o => o.value === m.mood)?.emoji ?? "🙂"}</span>
+                  <span className="text-muted-foreground text-xs w-32 shrink-0">
+                    {new Date(m.created_at).toLocaleString()}
+                  </span>
+                  {m.note && <span className="text-xs text-muted-foreground/80 truncate">{m.note}</span>}
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </motion.div>
 
@@ -171,26 +247,22 @@ export default function WellnessTab() {
         >
           <h3 className="font-display text-lg font-semibold mb-1">Talk to ZENTRIX</h3>
           <p className="text-xs text-muted-foreground mb-4">Your AI friend & wellness companion</p>
-          
+
           <div className="space-y-3 mb-5">
-            {[
-              "I'm feeling overwhelmed today",
-              "Help me process my thoughts",
-              "I need motivation right now",
-              "Let's do a gratitude exercise",
-              "Talk me through anxiety",
-            ].map((prompt) => (
+            {quickPrompts.map((prompt) => (
               <button
                 key={prompt}
+                onClick={() => onQuickPrompt?.(prompt)}
                 className="w-full text-left px-4 py-2.5 rounded-lg bg-secondary/50 border border-border hover:border-primary/30 hover:bg-primary/5 text-sm transition-all"
               >
                 💬 {prompt}
               </button>
             ))}
           </div>
-          
+
           <p className="text-[11px] text-muted-foreground/60 leading-relaxed">
             ZENTRIX is here as your supportive AI companion. For professional help, please reach out to a licensed therapist.
+            In a crisis in South Africa: SADAG 0800 21 21 21, Suicide Crisis Line 0800 567 567, or 112 for emergencies.
           </p>
         </motion.div>
       </div>
