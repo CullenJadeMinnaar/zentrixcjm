@@ -200,12 +200,26 @@ const Index = () => {
     [authMode]
   );
 
-  const handleSubscribe = (planId: string) => {
+  const handleSubscribe = async (planId: string) => {
     const selected = PLANS.find((p) => p.id === planId);
     if (!selected) { setPayError("Invalid plan selected."); return; }
-    setPlanLabel(selected.label);
-    localStorage.setItem(PLAN_CACHE_KEY, selected.label);
+    setPayError("");
+    // Plan entitlements are granted server-side only (after payment).
+    // The client can never grant itself a plan — re-read the authoritative value.
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setScreen("auth"); return; }
+    const { data: subscription } = await supabase
+      .from("subscriptions")
+      .select("plan_label")
+      .eq("user_id", session.user.id)
+      .maybeSingle();
+    const serverPlan = subscription?.plan_label || "Trial";
+    setPlanLabel(serverPlan);
+    localStorage.setItem(PLAN_CACHE_KEY, serverPlan);
     setScreen("dashboard");
+    if (serverPlan !== selected.label) {
+      toast.info(`Your ${serverPlan} access stays active until payment for ${selected.label} is confirmed.`);
+    }
   };
 
   const handleLogout = async () => {
