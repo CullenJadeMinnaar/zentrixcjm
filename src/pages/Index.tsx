@@ -66,6 +66,30 @@ const Index = () => {
     return () => stopNotificationLoop();
   }, [user]);
 
+  // Restore the most recent conversation once signed in
+  useEffect(() => {
+    if (!user || sessionId) return;
+    let alive = true;
+    (async () => {
+      try {
+        const s = await latestSession();
+        if (!alive || !s) return;
+        const rows = await loadSessionMessages(s.id);
+        if (!alive) return;
+        setSessionId(s.id);
+        if (rows.length) {
+          setAiMessages(rows.map((r) => ({
+            role: r.role === "user" ? ("user" as const) : ("assistant" as const),
+            content: r.content,
+          })));
+        }
+      } catch { /* keep the welcome screen */ }
+    })();
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+
   // Background session validation (non-blocking)
   useEffect(() => {
     let mounted = true;
