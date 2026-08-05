@@ -369,6 +369,10 @@ const Index = () => {
           chatEndRef={chatEndRef}
           onPrivacy={() => setScreen("privacy")}
           onLogout={handleLogout}
+          activeSessionId={sessionId}
+          onSelectSession={(id) => void openSession(id)}
+          onNewChat={handleNewChat}
+
         />
       )}
       {screen === "privacy" && (
