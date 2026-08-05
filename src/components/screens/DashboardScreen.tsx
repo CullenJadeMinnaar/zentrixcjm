@@ -1,16 +1,12 @@
-import { RefObject, KeyboardEvent, useState } from "react";
+import { RefObject, useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import { motion, AnimatePresence } from "framer-motion";
+import { History, PenSquare } from "lucide-react";
 import ZentrixLogo from "../ZentrixLogo";
-import { MAX_INPUT_LENGTH } from "@/lib/auth-helpers";
-import InsightsTab from "./dashboard/InsightsTab";
-import AutomationsTab from "./dashboard/AutomationsTab";
-import ReportsTab from "./dashboard/ReportsTab";
 import SettingsTab from "./dashboard/SettingsTab";
 import WellnessTab from "./dashboard/WellnessTab";
 import RemindersTab from "./dashboard/RemindersTab";
 import MemoriesTab from "./dashboard/MemoriesTab";
-import HistoryTab from "./dashboard/HistoryTab";
 import CreativeTab from "./dashboard/CreativeTab";
 import ProfileTab from "./dashboard/ProfileTab";
 import MemoryPanel from "./dashboard/MemoryPanel";
@@ -19,8 +15,9 @@ import HabitsTab from "./dashboard/HabitsTab";
 import JournalTab from "./dashboard/JournalTab";
 import GoalsTab from "./dashboard/GoalsTab";
 import CalendarTab from "./dashboard/CalendarTab";
-import VoiceTab from "./dashboard/VoiceTab";
-import NotificationsTab from "./dashboard/NotificationsTab";
+import ChatComposer from "./dashboard/ChatComposer";
+import ChatHistoryDrawer from "./dashboard/ChatHistoryDrawer";
+import { remindersApi } from "@/lib/productivity";
 
 interface Message {
   role: "user" | "assistant";
@@ -43,13 +40,17 @@ interface DashboardScreenProps {
   chatEndRef: RefObject<HTMLDivElement>;
   onPrivacy: () => void;
   onLogout: () => void;
+  activeSessionId: string | null;
+  onSelectSession: (id: string) => void;
+  onNewChat: () => void;
 }
 
-type Tab = "ai" | "profile" | "memories" | "wellness" | "history" | "creative" | "insights" | "reminders" | "automations" | "reports" | "settings" | "tasks" | "habits" | "journal" | "goals" | "calendar" | "voice" | "notifications";
+type Tab =
+  | "ai" | "profile" | "memories" | "creative" | "tasks" | "habits"
+  | "journal" | "goals" | "calendar" | "reminders" | "wellness" | "settings";
 
 const navItems: { id: Tab; label: string; icon: string }[] = [
   { id: "ai", label: "Morpheus", icon: "🕶️" },
-  { id: "voice", label: "Voice", icon: "🎙" },
   { id: "profile", label: "Profile", icon: "👤" },
   { id: "memories", label: "Memory Vault", icon: "🧠" },
   { id: "creative", label: "Creative Studio", icon: "🎨" },
@@ -59,31 +60,48 @@ const navItems: { id: Tab; label: string; icon: string }[] = [
   { id: "goals", label: "Goals", icon: "🎯" },
   { id: "calendar", label: "Calendar", icon: "📅" },
   { id: "reminders", label: "Reminders", icon: "🔔" },
-  { id: "history", label: "History", icon: "📜" },
   { id: "wellness", label: "Wellness", icon: "💚" },
-  { id: "insights", label: "Insights", icon: "📊" },
-  { id: "automations", label: "Automations", icon: "⚡" },
-  { id: "reports", label: "Analytics", icon: "📈" },
-  { id: "notifications", label: "Notifications", icon: "🔔" },
   { id: "settings", label: "Settings", icon: "⚙️" },
 ];
 
+const SUBTITLES: Record<Tab, string> = {
+  ai: "Your personal Morpheus — voice, files & memory, all in one place",
+  profile: "Teach Morpheus who you are — saved and remembered",
+  memories: "People, relationships & emotional context Morpheus remembers",
+  creative: "Generate images, memes, stickers & digital art with AI",
+  tasks: "Everything on your plate — organized, prioritized, done",
+  habits: "Small daily actions that compound into a great life",
+  journal: "A private space to think, feel and reflect",
+  goals: "The big things you're moving toward — with real progress",
+  calendar: "Your schedule at a glance",
+  reminders: "Never miss a thing — ZENTRIX keeps you on track",
+  wellness: "Daily affirmations, mood tracking & self-care",
+  settings: "Customize your ZENTRIX experience",
+};
+
 export default function DashboardScreen({
   user, planLabel, messages, input, setInput, onSend, loading, chatEndRef, onPrivacy, onLogout,
+  activeSessionId, onSelectSession, onNewChat,
 }: DashboardScreenProps) {
   const [activeTab, setActiveTab] = useState<Tab>("ai");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [dueCount, setDueCount] = useState(0);
 
-  const handleKey = (e: KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      onSend();
-    }
-  };
+  useEffect(() => {
+    let alive = true;
+    remindersApi.list()
+      .then((rs) => {
+        if (!alive) return;
+        const now = Date.now();
+        setDueCount(rs.filter((r) => r.active && new Date(r.remind_at).getTime() <= now).length);
+      })
+      .catch(() => { /* non-critical */ });
+    return () => { alive = false; };
+  }, [activeTab]);
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Mobile overlay */}
       {sidebarOpen && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -96,18 +114,18 @@ export default function DashboardScreen({
 
       {/* Sidebar */}
       <aside className={`
-        w-60 bg-sidebar border-r border-sidebar-border flex flex-col shrink-0
+        w-52 bg-sidebar border-r border-sidebar-border flex flex-col shrink-0
         fixed inset-y-0 left-0 z-40 transition-transform md:relative md:translate-x-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
         <div className="p-5 pb-0">
-          <div className="flex items-center gap-2.5 mb-6">
+          <div className="flex items-center gap-2.5 mb-5">
             <ZentrixLogo size={28} />
             <span className="font-display font-extrabold text-sm tracking-[4px] text-gradient-primary">ZENTRIX</span>
             <button className="ml-auto md:hidden text-muted-foreground hover:text-foreground" onClick={() => setSidebarOpen(false)}>✕</button>
           </div>
 
-          <div className="bg-primary/10 border border-primary/20 text-primary text-[10px] px-3 py-1.5 rounded-md text-center tracking-wider font-semibold uppercase mb-5">
+          <div className="bg-primary/10 border border-primary/20 text-primary text-[10px] px-3 py-1.5 rounded-md text-center tracking-wider font-semibold uppercase mb-4">
             {planLabel} plan
           </div>
         </div>
@@ -118,16 +136,18 @@ export default function DashboardScreen({
               key={item.id}
               whileTap={{ scale: 0.97 }}
               onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
-              className={`px-3.5 py-2.5 rounded-lg text-sm text-left transition-all flex items-center gap-3 ${
+              className={`px-3 py-2 rounded-lg text-sm text-left transition-all flex items-center gap-2.5 ${
                 activeTab === item.id
                   ? "bg-primary/10 text-foreground font-medium border border-primary/15"
                   : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-transparent"
               }`}
             >
-              <span className="text-base w-6 text-center">{item.icon}</span>
+              <span className="text-base w-5 text-center">{item.icon}</span>
               {item.label}
-              {item.id === "reminders" && (
-                <span className="ml-auto bg-accent text-accent-foreground text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">2</span>
+              {item.id === "reminders" && dueCount > 0 && (
+                <span className="ml-auto bg-accent text-accent-foreground text-[9px] font-bold min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
+                  {dueCount}
+                </span>
               )}
             </motion.button>
           ))}
@@ -158,37 +178,46 @@ export default function DashboardScreen({
       <main className="flex-1 flex flex-col overflow-hidden bg-gradient-mesh">
         <div className="px-6 py-4 border-b border-border/50 flex items-center gap-3 bg-background/50 backdrop-blur-sm">
           <button className="md:hidden text-foreground text-xl" onClick={() => setSidebarOpen(true)}>☰</button>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="text-base font-display font-semibold flex items-center gap-2">
               <span>{navItems.find(n => n.id === activeTab)?.icon}</span>
               {navItems.find(n => n.id === activeTab)?.label}
             </div>
-            <div className="text-[11px] text-muted-foreground mt-0.5">
-              {activeTab === "ai" && `Your personal Morpheus · ${planLabel} plan`}
-              {activeTab === "voice" && "Talk to Morpheus, hear him back — voice powered by AI"}
-              {activeTab === "profile" && "Teach Morpheus who you are — saved on this device, forever"}
-              {activeTab === "memories" && "People, relationships & emotional context Morpheus remembers"}
-              {activeTab === "creative" && "Generate images, memes, stickers & digital art with AI"}
-              {activeTab === "tasks" && "Everything on your plate — organized, prioritized, done"}
-              {activeTab === "habits" && "Small daily actions that compound into a great life"}
-              {activeTab === "journal" && "A private space to think, feel and reflect"}
-              {activeTab === "goals" && "The big things you're moving toward — with real progress"}
-              {activeTab === "calendar" && "Your schedule at a glance"}
-              {activeTab === "history" && "Browse your past conversations & interactions"}
-              {activeTab === "wellness" && "Daily affirmations, mood tracking & self-care"}
-              {activeTab === "insights" && "Curated intelligence, updated in real-time"}
-              {activeTab === "reminders" && "Never miss a thing — ZENTRIX keeps you on track"}
-              {activeTab === "automations" && "Automated workflows running in the background"}
-              {activeTab === "reports" && "Real-time analytics across your ZENTRIX activity"}
-              {activeTab === "notifications" && "Browser notifications, daily briefings & smart nudges"}
-              {activeTab === "settings" && "Customize your ZENTRIX experience"}
+            <div className="text-[11px] text-muted-foreground mt-0.5 truncate">
+              {activeTab === "ai" ? `${SUBTITLES.ai} · ${planLabel} plan` : SUBTITLES[activeTab]}
             </div>
           </div>
+          {activeTab === "ai" && (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={onNewChat}
+                title="New chat"
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
+              >
+                <PenSquare className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setHistoryOpen(true)}
+                title="Conversation history"
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
+              >
+                <History className="w-4 h-4" />
+              </button>
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
             <span className="text-[10px] text-primary font-medium hidden sm:block">Online</span>
           </div>
         </div>
+
+        <ChatHistoryDrawer
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          activeSessionId={activeSessionId}
+          onSelect={onSelectSession}
+          onNewChat={onNewChat}
+        />
 
         <AnimatePresence mode="wait">
           {activeTab === "ai" && (
@@ -199,77 +228,57 @@ export default function DashboardScreen({
               exit={{ opacity: 0 }}
               className="flex-1 flex flex-col overflow-hidden"
             >
-              <div className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-4">
-                {messages.map((msg, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.02 }}
-                    className={`flex items-start gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
-                  >
-                    {msg.role === "assistant" && (
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 mt-0.5">
+              <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
+                <div className="max-w-3xl mx-auto flex flex-col gap-4">
+                  {messages.map((msg, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.02 }}
+                      className={`flex items-start gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
+                    >
+                      {msg.role === "assistant" && (
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 mt-0.5">
+                          <ZentrixLogo size={16} />
+                        </div>
+                      )}
+                      <div
+                        className={`max-w-[75%] rounded-xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                          msg.role === "user"
+                            ? "bg-primary/15 border border-primary/20 rounded-br-sm"
+                            : "bg-card/80 border border-border/60 rounded-bl-sm backdrop-blur-sm whitespace-normal"
+                        }`}
+                      >
+                        {msg.role === "assistant" ? (
+                          <div className="prose prose-sm prose-invert max-w-none [&>p]:mb-2 [&>ul]:mb-2 [&>ol]:mb-2">
+                            <ReactMarkdown>{msg.content}</ReactMarkdown>
+                          </div>
+                        ) : (
+                          msg.content
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                  {loading && (
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
                         <ZentrixLogo size={16} />
                       </div>
-                    )}
-                    <div
-                      className={`max-w-[75%] rounded-xl px-4 py-3 text-sm leading-relaxed ${
-                        msg.role === "user"
-                          ? "bg-primary/15 border border-primary/20 rounded-br-sm"
-                          : "bg-card/80 border border-border/60 rounded-bl-sm backdrop-blur-sm"
-                      }`}
-                    >
-                      {msg.role === "assistant" ? (
-                        <div className="prose prose-sm prose-invert max-w-none [&>p]:mb-2 [&>ul]:mb-2 [&>ol]:mb-2">
-                          <ReactMarkdown>{msg.content}</ReactMarkdown>
-                        </div>
-                      ) : (
-                        msg.content
-                      )}
+                      <div className="bg-card/80 border border-border/60 rounded-xl rounded-bl-sm px-5 py-3 text-sm flex gap-1">
+                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse" style={{ animationDelay: "0.2s" }} />
+                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse" style={{ animationDelay: "0.4s" }} />
+                      </div>
                     </div>
-                  </motion.div>
-                ))}
-                {loading && (
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                      <ZentrixLogo size={16} />
-                    </div>
-                    <div className="bg-card/80 border border-border/60 rounded-xl rounded-bl-sm px-5 py-3 text-sm flex gap-1">
-                      <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                      <span className="w-2 h-2 rounded-full bg-primary animate-pulse" style={{ animationDelay: "0.2s" }} />
-                      <span className="w-2 h-2 rounded-full bg-primary animate-pulse" style={{ animationDelay: "0.4s" }} />
-                    </div>
-                  </div>
-                )}
-                <div ref={chatEndRef} />
+                  )}
+                  <div ref={chatEndRef} />
+                </div>
               </div>
 
               <MemoryPanel onOpenProfile={() => setActiveTab("profile")} />
 
-              <div className="px-6 pt-4 pb-2 border-t border-border/30 flex gap-3 items-end bg-background/30 backdrop-blur-sm">
-                <textarea
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKey}
-                  placeholder="Talk to ZENTRIX — your AI friend, therapist & strategist..."
-                  maxLength={MAX_INPUT_LENGTH}
-                  rows={2}
-                  className="flex-1 bg-secondary/50 border border-border rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all"
-                />
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => onSend()}
-                  disabled={loading || !input.trim()}
-                  className="bg-primary text-primary-foreground rounded-lg px-6 py-3 text-sm font-semibold hover:brightness-110 transition-all disabled:opacity-40"
-                >
-                  {loading ? "···" : "Send"}
-                </motion.button>
-              </div>
-              <div className="px-6 pb-3 text-[10px] text-muted-foreground/30">
-                {input.length}/{MAX_INPUT_LENGTH} · Enter to send · Shift+Enter for new line
-              </div>
+              <ChatComposer input={input} setInput={setInput} onSend={(text) => onSend(text)} loading={loading} />
             </motion.div>
           )}
 
@@ -291,21 +300,9 @@ export default function DashboardScreen({
             </motion.div>
           )}
 
-          {activeTab === "history" && (
-            <motion.div key="history" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto">
-              <HistoryTab />
-            </motion.div>
-          )}
-
           {activeTab === "wellness" && (
             <motion.div key="wellness" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto">
               <WellnessTab onQuickPrompt={(p) => { setActiveTab("ai"); onSend(p); }} />
-            </motion.div>
-          )}
-
-          {activeTab === "insights" && (
-            <motion.div key="insights" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto">
-              <InsightsTab />
             </motion.div>
           )}
 
@@ -315,27 +312,12 @@ export default function DashboardScreen({
             </motion.div>
           )}
 
-          {activeTab === "automations" && (
-            <motion.div key="automations" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto">
-              <AutomationsTab />
-            </motion.div>
-          )}
-
-          {activeTab === "reports" && (
-            <motion.div key="reports" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto">
-              <ReportsTab />
-            </motion.div>
-          )}
-
           {activeTab === "settings" && (
             <motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto">
               <SettingsTab user={user} onLogout={onLogout} />
             </motion.div>
           )}
 
-          {activeTab === "voice" && (
-            <motion.div key="voice" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto"><VoiceTab /></motion.div>
-          )}
           {activeTab === "tasks" && (
             <motion.div key="tasks" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto"><TasksTab /></motion.div>
           )}
@@ -350,9 +332,6 @@ export default function DashboardScreen({
           )}
           {activeTab === "calendar" && (
             <motion.div key="calendar" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto"><CalendarTab /></motion.div>
-          )}
-          {activeTab === "notifications" && (
-            <motion.div key="notifications" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 overflow-y-auto"><NotificationsTab /></motion.div>
           )}
         </AnimatePresence>
       </main>
