@@ -12,6 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { loadMemory, buildMemoryPrompt } from "@/lib/memory";
 import { startNotificationLoop, stopNotificationLoop, notificationsPermission } from "@/lib/notifications";
+import { createSession, latestSession, loadSessionMessages, saveMessage } from "@/lib/chat-persistence";
+
 
 type Screen = "landing" | "auth" | "paywall" | "dashboard" | "privacy";
 type AuthMode = "login" | "register" | "forgot";
@@ -25,6 +27,12 @@ interface User {
 
 const USER_CACHE_KEY = "zentrix_user";
 const PLAN_CACHE_KEY = "zentrix_plan";
+
+const WELCOME_MESSAGE = {
+  role: "assistant" as const,
+  content: "Hey! 👋 I'm **ZENTRIX** — think of me as your personal Morpheus. I'm part AI assistant, part life coach, part therapist, part best friend.\n\nI'm here to help you **think clearer**, **feel better**, and **move smarter**. Whether you need to vent, strategize, or just have someone to talk to — I'm always here.\n\nWhat's on your mind today?",
+};
+
 
 const Index = () => {
   // ⚡ Hydrate instantly from localStorage so the dashboard appears with no flash
@@ -41,11 +49,11 @@ const Index = () => {
   const [lockCountdown, setLockCountdown] = useState(0);
   const [authLoading, setAuthLoading] = useState(false);
   const [payError, setPayError] = useState("");
-  const [aiMessages, setAiMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([
-    { role: "assistant", content: "Hey! 👋 I'm **ZENTRIX** — think of me as your personal Morpheus. I'm part AI assistant, part life coach, part therapist, part best friend.\n\nI'm here to help you **think clearer**, **feel better**, and **move smarter**. Whether you need to vent, strategize, or just have someone to talk to — I'm always here.\n\nWhat's on your mind today?" },
-  ]);
+  const [aiMessages, setAiMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([WELCOME_MESSAGE]);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+
   const chatEndRef = useRef<HTMLDivElement>(null!);
 
   // Theme
@@ -57,6 +65,30 @@ const Index = () => {
     if (notificationsPermission() === "granted") startNotificationLoop();
     return () => stopNotificationLoop();
   }, [user]);
+
+  // Restore the most recent conversation once signed in
+  useEffect(() => {
+    if (!user || sessionId) return;
+    let alive = true;
+    (async () => {
+      try {
+        const s = await latestSession();
+        if (!alive || !s) return;
+        const rows = await loadSessionMessages(s.id);
+        if (!alive) return;
+        setSessionId(s.id);
+        if (rows.length) {
+          setAiMessages(rows.map((r) => ({
+            role: r.role === "user" ? ("user" as const) : ("assistant" as const),
+            content: r.content,
+          })));
+        }
+      } catch { /* keep the welcome screen */ }
+    })();
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
 
   // Background session validation (non-blocking)
   useEffect(() => {
@@ -231,16 +263,43 @@ const Index = () => {
     setScreen("landing");
   };
 
+  const openSession = useCallback(async (id: string) => {
+    try {
+      const rows = await loadSessionMessages(id);
+      setSessionId(id);
+      setAiMessages(
+        rows.length
+          ? rows.map((r) => ({ role: r.role === "user" ? ("user" as const) : ("assistant" as const), content: r.content }))
+          : [WELCOME_MESSAGE]
+      );
+    } catch {
+      toast.error("Could not load that conversation");
+    }
+  }, []);
+
+  const handleNewChat = useCallback(() => {
+    setSessionId(null);
+    setAiMessages([WELCOME_MESSAGE]);
+    setInput("");
+  }, []);
+
   const handleSendMessage = async (overrideText?: string) => {
     const clean = sanitize(typeof overrideText === "string" ? overrideText : input);
     if (!clean || aiLoading) return;
-
 
     const userMsg = { role: "user" as const, content: clean };
     const updatedMessages = [...aiMessages, userMsg];
     setAiMessages(updatedMessages);
     setInput("");
     setAiLoading(true);
+
+    // Persist: create the session on the first message, then store the user turn
+    let activeSession = sessionId;
+    if (!activeSession) {
+      activeSession = await createSession(clean);
+      if (activeSession) setSessionId(activeSession);
+    }
+    if (activeSession) void saveMessage(activeSession, "user", clean);
 
     let assistantSoFar = "";
     const upsertAssistant = (chunk: string) => {
@@ -260,7 +319,10 @@ const Index = () => {
         messages: updatedMessages,
         memoryContext,
         onDelta: (chunk) => upsertAssistant(chunk),
-        onDone: () => setAiLoading(false),
+        onDone: () => {
+          setAiLoading(false);
+          if (activeSession && assistantSoFar.trim()) void saveMessage(activeSession, "assistant", assistantSoFar);
+        },
         onError: (err) => { toast.error(err); setAiLoading(false); },
       });
     } catch (e) {
@@ -269,6 +331,7 @@ const Index = () => {
       setAiLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -306,6 +369,10 @@ const Index = () => {
           chatEndRef={chatEndRef}
           onPrivacy={() => setScreen("privacy")}
           onLogout={handleLogout}
+          activeSessionId={sessionId}
+          onSelectSession={(id) => void openSession(id)}
+          onNewChat={handleNewChat}
+
         />
       )}
       {screen === "privacy" && (
