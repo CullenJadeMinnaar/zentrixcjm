@@ -28,6 +28,12 @@ interface User {
 const USER_CACHE_KEY = "zentrix_user";
 const PLAN_CACHE_KEY = "zentrix_plan";
 
+const WELCOME_MESSAGE = {
+  role: "assistant" as const,
+  content: "Hey! 👋 I'm **ZENTRIX** — think of me as your personal Morpheus. I'm part AI assistant, part life coach, part therapist, part best friend.\n\nI'm here to help you **think clearer**, **feel better**, and **move smarter**. Whether you need to vent, strategize, or just have someone to talk to — I'm always here.\n\nWhat's on your mind today?",
+};
+
+
 const Index = () => {
   // ⚡ Hydrate instantly from localStorage so the dashboard appears with no flash
   const cachedUserRaw = typeof window !== "undefined" ? localStorage.getItem(USER_CACHE_KEY) : null;
