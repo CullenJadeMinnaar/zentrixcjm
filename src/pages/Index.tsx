@@ -239,16 +239,43 @@ const Index = () => {
     setScreen("landing");
   };
 
+  const openSession = useCallback(async (id: string) => {
+    try {
+      const rows = await loadSessionMessages(id);
+      setSessionId(id);
+      setAiMessages(
+        rows.length
+          ? rows.map((r) => ({ role: r.role === "user" ? ("user" as const) : ("assistant" as const), content: r.content }))
+          : [WELCOME_MESSAGE]
+      );
+    } catch {
+      toast.error("Could not load that conversation");
+    }
+  }, []);
+
+  const handleNewChat = useCallback(() => {
+    setSessionId(null);
+    setAiMessages([WELCOME_MESSAGE]);
+    setInput("");
+  }, []);
+
   const handleSendMessage = async (overrideText?: string) => {
     const clean = sanitize(typeof overrideText === "string" ? overrideText : input);
     if (!clean || aiLoading) return;
-
 
     const userMsg = { role: "user" as const, content: clean };
     const updatedMessages = [...aiMessages, userMsg];
     setAiMessages(updatedMessages);
     setInput("");
     setAiLoading(true);
+
+    // Persist: create the session on the first message, then store the user turn
+    let activeSession = sessionId;
+    if (!activeSession) {
+      activeSession = await createSession(clean);
+      if (activeSession) setSessionId(activeSession);
+    }
+    if (activeSession) void saveMessage(activeSession, "user", clean);
 
     let assistantSoFar = "";
     const upsertAssistant = (chunk: string) => {
@@ -268,7 +295,10 @@ const Index = () => {
         messages: updatedMessages,
         memoryContext,
         onDelta: (chunk) => upsertAssistant(chunk),
-        onDone: () => setAiLoading(false),
+        onDone: () => {
+          setAiLoading(false);
+          if (activeSession && assistantSoFar.trim()) void saveMessage(activeSession, "assistant", assistantSoFar);
+        },
         onError: (err) => { toast.error(err); setAiLoading(false); },
       });
     } catch (e) {
@@ -277,6 +307,7 @@ const Index = () => {
       setAiLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-background text-foreground">
