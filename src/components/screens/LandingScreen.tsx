@@ -7,7 +7,7 @@ import { COMPANY_INFO } from "@/lib/constants";
 const HeroScene = lazy(() => import("../3d/HeroScene"));
 
 interface LandingScreenProps {
-  onAuth: () => void;
+  onAuth: (mode?: "login" | "register") => void;
   onPrivacy: () => void;
 }
 
@@ -44,10 +44,16 @@ export default function LandingScreen({ onAuth, onPrivacy }: LandingScreenProps)
           <button onClick={onPrivacy} className="text-muted-foreground text-sm hover:text-foreground transition-colors hidden sm:block">
             Privacy
           </button>
+          <button
+            onClick={() => onAuth("login")}
+            className="text-foreground text-sm font-semibold hover:text-primary transition-colors"
+          >
+            Log in
+          </button>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={onAuth}
+            onClick={() => onAuth("register")}
             className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg text-sm font-bold hover:brightness-110 transition-all"
           >
             Get started
