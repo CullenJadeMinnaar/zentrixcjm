@@ -7,7 +7,7 @@ import { COMPANY_INFO } from "@/lib/constants";
 const HeroScene = lazy(() => import("../3d/HeroScene"));
 
 interface LandingScreenProps {
-  onAuth: () => void;
+  onAuth: (mode?: "login" | "register") => void;
   onPrivacy: () => void;
 }
 
@@ -44,10 +44,16 @@ export default function LandingScreen({ onAuth, onPrivacy }: LandingScreenProps)
           <button onClick={onPrivacy} className="text-muted-foreground text-sm hover:text-foreground transition-colors hidden sm:block">
             Privacy
           </button>
+          <button
+            onClick={() => onAuth("login")}
+            className="text-foreground text-sm font-semibold hover:text-primary transition-colors"
+          >
+            Log in
+          </button>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={onAuth}
+            onClick={() => onAuth("register")}
             className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg text-sm font-bold hover:brightness-110 transition-all"
           >
             Get started
@@ -85,11 +91,11 @@ export default function LandingScreen({ onAuth, onPrivacy }: LandingScreenProps)
               all in one. Like having Morpheus guiding you through life.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 mb-8">
+            <div className="flex flex-col sm:flex-row gap-4 mb-4">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={onAuth}
+                onClick={() => onAuth("register")}
                 className="bg-primary text-primary-foreground px-10 py-4 rounded-lg text-lg font-bold hover:brightness-110 transition-all glow-primary"
               >
                 Start free trial →
@@ -103,6 +109,12 @@ export default function LandingScreen({ onAuth, onPrivacy }: LandingScreenProps)
                 Meet the team
               </motion.button>
             </div>
+            <p className="text-sm text-muted-foreground mb-8">
+              Already with us?{" "}
+              <button onClick={() => onAuth("login")} className="text-primary font-semibold hover:underline">
+                Log in
+              </button>
+            </p>
           </motion.div>
 
           {/* Stats bar */}
@@ -224,11 +236,17 @@ export default function LandingScreen({ onAuth, onPrivacy }: LandingScreenProps)
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={onAuth}
+                onClick={() => onAuth("register")}
                 className="bg-primary text-primary-foreground px-12 py-4 rounded-lg text-lg font-bold hover:brightness-110 transition-all glow-primary"
               >
                 Begin your journey →
               </motion.button>
+              <p className="text-sm text-muted-foreground mt-4">
+                Already have an account?{" "}
+                <button onClick={() => onAuth("login")} className="text-primary font-semibold hover:underline">
+                  Log in
+                </button>
+              </p>
             </div>
           </motion.div>
         </section>

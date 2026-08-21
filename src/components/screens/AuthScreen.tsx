@@ -58,7 +58,7 @@ export default function AuthScreen({ mode, setMode, onSubmit, error, locked, cou
         </h2>
         <p className="text-sm text-muted-foreground mb-7">
           {mode === "login"
-            ? "Your intelligence layer is waiting"
+            ? "Sign in to pick up right where you left off"
             : mode === "register"
             ? "Start your 14-day free trial — no card needed"
             : "We'll send a reset link to your email"}
