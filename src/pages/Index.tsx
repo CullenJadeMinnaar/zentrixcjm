@@ -9,6 +9,7 @@ import { RateLimiter, sanitize, validateEmail, validatePassword } from "@/lib/au
 import { PLANS } from "@/lib/constants";
 import { streamChat } from "@/lib/chat-stream";
 import { supabase } from "@/integrations/supabase/client";
+import type { Session } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { loadMemory, buildMemoryPrompt } from "@/lib/memory";
 import { startNotificationLoop, stopNotificationLoop, notificationsPermission } from "@/lib/notifications";
@@ -94,10 +95,10 @@ const Index = () => {
   useEffect(() => {
     let mounted = true;
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    const handleSession = async (session: Session | null) => {
       if (!mounted) return;
       if (!session?.user) {
-        // No valid session → clear cache and bounce to landing
+        // Still no valid session after refresh → clear cache and bounce to landing
         localStorage.removeItem(USER_CACHE_KEY);
         localStorage.removeItem(PLAN_CACHE_KEY);
         setUser(null);
@@ -130,6 +131,17 @@ const Index = () => {
       setPlanLabel(serverPlan);
       localStorage.setItem(PLAN_CACHE_KEY, serverPlan);
       setScreen((s) => (s === "landing" || s === "auth" ? "dashboard" : s));
+    };
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!mounted) return;
+      if (session?.user) {
+        await handleSession(session);
+        return;
+      }
+      // Retry once via refresh before giving up (handles transient races / rehydration hiccups)
+      const { data: { session: refreshed } } = await supabase.auth.refreshSession();
+      await handleSession(refreshed);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
