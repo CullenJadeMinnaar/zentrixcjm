@@ -236,11 +236,17 @@ export default function LandingScreen({ onAuth, onPrivacy }: LandingScreenProps)
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={onAuth}
+                onClick={() => onAuth("register")}
                 className="bg-primary text-primary-foreground px-12 py-4 rounded-lg text-lg font-bold hover:brightness-110 transition-all glow-primary"
               >
                 Begin your journey →
               </motion.button>
+              <p className="text-sm text-muted-foreground mt-4">
+                Already have an account?{" "}
+                <button onClick={() => onAuth("login")} className="text-primary font-semibold hover:underline">
+                  Log in
+                </button>
+              </p>
             </div>
           </motion.div>
         </section>
