@@ -49,20 +49,44 @@ type Tab =
   | "ai" | "profile" | "memories" | "creative" | "tasks" | "habits"
   | "journal" | "goals" | "calendar" | "reminders" | "wellness" | "settings";
 
-const navItems: { id: Tab; label: string; icon: string }[] = [
-  { id: "ai", label: "Morpheus", icon: "🕶️" },
-  { id: "profile", label: "Profile", icon: "👤" },
-  { id: "memories", label: "Memory Vault", icon: "🧠" },
-  { id: "creative", label: "Creative Studio", icon: "🎨" },
-  { id: "tasks", label: "Tasks", icon: "✅" },
-  { id: "habits", label: "Habits", icon: "🌱" },
-  { id: "journal", label: "Journal", icon: "📔" },
-  { id: "goals", label: "Goals", icon: "🎯" },
-  { id: "calendar", label: "Calendar", icon: "📅" },
-  { id: "reminders", label: "Reminders", icon: "🔔" },
-  { id: "wellness", label: "Wellness", icon: "💚" },
-  { id: "settings", label: "Settings", icon: "⚙️" },
+type NavItem = { id: Tab; label: string; icon: string };
+
+const navGroups: { label: string; items: NavItem[] }[] = [
+  {
+    label: "Assistant",
+    items: [
+      { id: "ai", label: "Morpheus", icon: "🕶️" },
+      { id: "memories", label: "Memory Vault", icon: "🧠" },
+      { id: "creative", label: "Creative Studio", icon: "🎨" },
+    ],
+  },
+  {
+    label: "Productivity",
+    items: [
+      { id: "tasks", label: "Tasks", icon: "✅" },
+      { id: "habits", label: "Habits", icon: "🌱" },
+      { id: "goals", label: "Goals", icon: "🎯" },
+      { id: "calendar", label: "Calendar", icon: "📅" },
+      { id: "reminders", label: "Reminders", icon: "🔔" },
+    ],
+  },
+  {
+    label: "Wellbeing",
+    items: [
+      { id: "journal", label: "Journal", icon: "📔" },
+      { id: "wellness", label: "Wellness", icon: "💚" },
+    ],
+  },
+  {
+    label: "Account",
+    items: [
+      { id: "profile", label: "Profile", icon: "👤" },
+      { id: "settings", label: "Settings", icon: "⚙️" },
+    ],
+  },
 ];
+
+const navItems: NavItem[] = navGroups.flatMap((g) => g.items);
 
 const SUBTITLES: Record<Tab, string> = {
   ai: "Your personal Morpheus — voice, files & memory, all in one place",
