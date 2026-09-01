@@ -1,4 +1,4 @@
-import { useRef, useState, KeyboardEvent, ChangeEvent } from "react";
+import { useRef, useState, useLayoutEffect, KeyboardEvent, ChangeEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Paperclip, Mic, Send, Square, X, Loader2 } from "lucide-react";
