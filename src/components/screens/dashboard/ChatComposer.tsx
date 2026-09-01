@@ -130,13 +130,14 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
           </AnimatePresence>
 
           <textarea
+            ref={taRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKey}
-            placeholder="Talk to Morpheus — your AI friend, therapist & strategist…"
+            placeholder="Message Morpheus…"
             maxLength={MAX_INPUT_LENGTH}
-            rows={2}
-            className="w-full bg-transparent px-4 pt-3 pb-1 text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none"
+            rows={1}
+            className="w-full bg-transparent px-4 pt-3.5 pb-1 text-sm leading-6 text-foreground placeholder:text-muted-foreground/70 resize-none focus:outline-none max-h-[200px] overflow-y-auto"
           />
 
           <div className="flex items-center gap-1.5 px-2.5 pb-2.5">
