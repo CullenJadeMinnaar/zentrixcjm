@@ -154,26 +154,35 @@ export default function DashboardScreen({
           </div>
         </div>
 
-        <nav className="flex flex-col gap-0.5 flex-1 px-3 overflow-y-auto">
-          {navItems.map((item) => (
-            <motion.button
-              key={item.id}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
-              className={`px-3 py-2 rounded-lg text-sm text-left transition-all flex items-center gap-2.5 ${
-                activeTab === item.id
-                  ? "bg-primary/10 text-foreground font-medium border border-primary/15"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-transparent"
-              }`}
-            >
-              <span className="text-base w-5 text-center">{item.icon}</span>
-              {item.label}
-              {item.id === "reminders" && dueCount > 0 && (
-                <span className="ml-auto bg-accent text-accent-foreground text-[9px] font-bold min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
-                  {dueCount}
-                </span>
-              )}
-            </motion.button>
+        <nav className="flex flex-col flex-1 px-3 overflow-y-auto">
+          {navGroups.map((group) => (
+            <div key={group.label} className="mb-3 last:mb-0">
+              <div className="px-3 pb-1 text-[9px] font-semibold uppercase tracking-[1.5px] text-muted-foreground/60">
+                {group.label}
+              </div>
+              <div className="flex flex-col gap-0.5">
+                {group.items.map((item) => (
+                  <motion.button
+                    key={item.id}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
+                    className={`px-3 py-2 rounded-lg text-sm text-left transition-all flex items-center gap-2.5 ${
+                      activeTab === item.id
+                        ? "bg-primary/10 text-foreground font-medium border border-primary/15"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-transparent"
+                    }`}
+                  >
+                    <span className="text-base w-5 text-center">{item.icon}</span>
+                    {item.label}
+                    {item.id === "reminders" && dueCount > 0 && (
+                      <span className="ml-auto bg-accent text-accent-foreground text-[9px] font-bold min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
+                        {dueCount}
+                      </span>
+                    )}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
 
