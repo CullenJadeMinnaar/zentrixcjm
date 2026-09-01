@@ -21,6 +21,16 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const taRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-expand the textarea with content (Claude-style composer)
+  useLayoutEffect(() => {
+    const el = taRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+  }, [input]);
+
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
