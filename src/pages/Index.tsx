@@ -2,11 +2,9 @@ import { useState, useEffect, useRef, useCallback, FormEvent } from "react";
 import { applyTheme, getSavedTheme } from "@/lib/themes";
 import LandingScreen from "@/components/screens/LandingScreen";
 import AuthScreen from "@/components/screens/AuthScreen";
-import PaywallScreen from "@/components/screens/PaywallScreen";
 import DashboardScreen from "@/components/screens/DashboardScreen";
 import PrivacyScreen from "@/components/screens/PrivacyScreen";
 import { RateLimiter, sanitize, validateEmail, validatePassword } from "@/lib/auth-helpers";
-import { PLANS } from "@/lib/constants";
 import { streamChat } from "@/lib/chat-stream";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session } from "@supabase/supabase-js";
@@ -16,7 +14,7 @@ import { startNotificationLoop, stopNotificationLoop, notificationsPermission } 
 import { createSession, latestSession, loadSessionMessages, saveMessage } from "@/lib/chat-persistence";
 
 
-type Screen = "landing" | "auth" | "paywall" | "dashboard" | "privacy";
+type Screen = "landing" | "auth" | "dashboard" | "privacy";
 type AuthMode = "login" | "register" | "forgot";
 
 const authLimiter = new RateLimiter(5, 15 * 60 * 1000);
@@ -27,7 +25,6 @@ interface User {
 }
 
 const USER_CACHE_KEY = "zentrix_user";
-const PLAN_CACHE_KEY = "zentrix_plan";
 
 const WELCOME_MESSAGE = {
   role: "assistant" as const,
@@ -39,17 +36,14 @@ const Index = () => {
   // ⚡ Hydrate instantly from localStorage so the dashboard appears with no flash
   const cachedUserRaw = typeof window !== "undefined" ? localStorage.getItem(USER_CACHE_KEY) : null;
   const cachedUser: User | null = cachedUserRaw ? (() => { try { return JSON.parse(cachedUserRaw); } catch { return null; } })() : null;
-  const cachedPlan = typeof window !== "undefined" ? localStorage.getItem(PLAN_CACHE_KEY) : null;
 
   const [screen, setScreen] = useState<Screen>(cachedUser ? "dashboard" : "landing");
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [user, setUser] = useState<User | null>(cachedUser);
-  const [planLabel, setPlanLabel] = useState(cachedPlan || (cachedUser ? "Trial" : ""));
   const [authError, setAuthError] = useState("");
   const [authLocked, setAuthLocked] = useState(false);
   const [lockCountdown, setLockCountdown] = useState(0);
   const [authLoading, setAuthLoading] = useState(false);
-  const [payError, setPayError] = useState("");
   const [aiMessages, setAiMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([WELCOME_MESSAGE]);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [input, setInput] = useState("");
@@ -100,9 +94,7 @@ const Index = () => {
       if (!session?.user) {
         // Still no valid session after refresh → clear cache and bounce to landing
         localStorage.removeItem(USER_CACHE_KEY);
-        localStorage.removeItem(PLAN_CACHE_KEY);
         setUser(null);
-        setPlanLabel("");
         setScreen((s) => (s === "dashboard" ? "landing" : s));
         return;
       }
@@ -113,13 +105,6 @@ const Index = () => {
         .eq("user_id", session.user.id)
         .single();
 
-      // Plan entitlement is server-authoritative — never trust localStorage
-      const { data: subscription } = await supabase
-        .from("subscriptions")
-        .select("plan_label")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
-
       if (!mounted) return;
       const next: User = {
         name: profile?.display_name || session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "User",
@@ -127,9 +112,6 @@ const Index = () => {
       };
       setUser(next);
       localStorage.setItem(USER_CACHE_KEY, JSON.stringify(next));
-      const serverPlan = subscription?.plan_label || "Trial";
-      setPlanLabel(serverPlan);
-      localStorage.setItem(PLAN_CACHE_KEY, serverPlan);
       setScreen((s) => (s === "landing" || s === "auth" ? "dashboard" : s));
     };
 
@@ -148,9 +130,7 @@ const Index = () => {
       if (!mounted) return;
       if (!session?.user) {
         localStorage.removeItem(USER_CACHE_KEY);
-        localStorage.removeItem(PLAN_CACHE_KEY);
         setUser(null);
-        setPlanLabel("");
         setScreen((s) => (s === "dashboard" ? "landing" : s));
       }
     });
@@ -234,44 +214,18 @@ const Index = () => {
             email,
           };
           setUser(newUser);
-          setPlanLabel("Trial");
           setScreen("dashboard");
           localStorage.setItem(USER_CACHE_KEY, JSON.stringify(newUser));
-          localStorage.setItem(PLAN_CACHE_KEY, "Trial");
         }
       }
     },
     [authMode]
   );
 
-  const handleSubscribe = async (planId: string) => {
-    const selected = PLANS.find((p) => p.id === planId);
-    if (!selected) { setPayError("Invalid plan selected."); return; }
-    setPayError("");
-    // Plan entitlements are granted server-side only (after payment).
-    // The client can never grant itself a plan — re-read the authoritative value.
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) { setScreen("auth"); return; }
-    const { data: subscription } = await supabase
-      .from("subscriptions")
-      .select("plan_label")
-      .eq("user_id", session.user.id)
-      .maybeSingle();
-    const serverPlan = subscription?.plan_label || "Trial";
-    setPlanLabel(serverPlan);
-    localStorage.setItem(PLAN_CACHE_KEY, serverPlan);
-    setScreen("dashboard");
-    if (serverPlan !== selected.label) {
-      toast.info(`Your ${serverPlan} access stays active until payment for ${selected.label} is confirmed.`);
-    }
-  };
-
   const handleLogout = async () => {
     await supabase.auth.signOut();
     localStorage.removeItem(USER_CACHE_KEY);
-    localStorage.removeItem(PLAN_CACHE_KEY);
     setUser(null);
-    setPlanLabel("");
     setScreen("landing");
   };
 
@@ -362,17 +316,9 @@ const Index = () => {
           onBack={() => setScreen("landing")}
         />
       )}
-      {screen === "paywall" && (
-        <PaywallScreen
-          userName={user?.name || ""}
-          onSelect={handleSubscribe}
-          error={payError}
-        />
-      )}
       {screen === "dashboard" && user && (
         <DashboardScreen
           user={user}
-          planLabel={planLabel || "Trial"}
           messages={aiMessages}
           input={input}
           setInput={setInput}
