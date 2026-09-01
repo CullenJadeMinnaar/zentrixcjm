@@ -1,4 +1,4 @@
-import { useRef, useState, KeyboardEvent, ChangeEvent } from "react";
+import { useRef, useState, useLayoutEffect, KeyboardEvent, ChangeEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Paperclip, Mic, Send, Square, X, Loader2 } from "lucide-react";
@@ -21,6 +21,16 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const taRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-expand the textarea with content (Claude-style composer)
+  useLayoutEffect(() => {
+    const el = taRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+  }, [input]);
+
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
@@ -130,13 +140,14 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
           </AnimatePresence>
 
           <textarea
+            ref={taRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKey}
-            placeholder="Talk to Morpheus — your AI friend, therapist & strategist…"
+            placeholder="Message Morpheus…"
             maxLength={MAX_INPUT_LENGTH}
-            rows={2}
-            className="w-full bg-transparent px-4 pt-3 pb-1 text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none"
+            rows={1}
+            className="w-full bg-transparent px-4 pt-3.5 pb-1 text-sm leading-6 text-foreground placeholder:text-muted-foreground/70 resize-none focus:outline-none max-h-[200px] overflow-y-auto"
           />
 
           <div className="flex items-center gap-1.5 px-2.5 pb-2.5">
