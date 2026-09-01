@@ -77,7 +77,7 @@ export default function LandingScreen({ onAuth, onPrivacy }: LandingScreenProps)
               className="bg-glass border border-glass text-foreground px-5 py-2 rounded-full text-xs tracking-widest font-medium mb-10 flex items-center gap-2"
             >
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              AI-Powered Intelligence · {COMPANY_INFO.trialDays}-Day Free Trial
+              AI-Powered Intelligence · Free Forever
             </motion.div>
 
             <h1 className="font-display text-5xl sm:text-6xl md:text-8xl font-extrabold leading-[1.02] mb-7 tracking-tight">
@@ -98,7 +98,7 @@ export default function LandingScreen({ onAuth, onPrivacy }: LandingScreenProps)
                 onClick={() => onAuth("register")}
                 className="bg-primary text-primary-foreground px-10 py-4 rounded-lg text-lg font-bold hover:brightness-110 transition-all glow-primary"
               >
-                Start free trial →
+                Get started free →
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -231,7 +231,7 @@ export default function LandingScreen({ onAuth, onPrivacy }: LandingScreenProps)
                 <span className="text-gradient-primary">Morpheus?</span>
               </h2>
               <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
-                Start your {COMPANY_INFO.trialDays}-day free trial. No credit card required. Your AI companion awaits.
+                ZENTRIX is completely free. No credit card, no limits. Your AI companion awaits.
               </p>
               <motion.button
                 whileHover={{ scale: 1.05 }}

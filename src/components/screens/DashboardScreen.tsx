@@ -31,7 +31,6 @@ interface User {
 
 interface DashboardScreenProps {
   user: User;
-  planLabel: string;
   messages: Message[];
   input: string;
   setInput: (v: string) => void;
@@ -104,7 +103,7 @@ const SUBTITLES: Record<Tab, string> = {
 };
 
 export default function DashboardScreen({
-  user, planLabel, messages, input, setInput, onSend, loading, chatEndRef, onPrivacy, onLogout,
+  user, messages, input, setInput, onSend, loading, chatEndRef, onPrivacy, onLogout,
   activeSessionId, onSelectSession, onNewChat,
 }: DashboardScreenProps) {
   const [activeTab, setActiveTab] = useState<Tab>("ai");
@@ -151,7 +150,7 @@ export default function DashboardScreen({
           </div>
 
           <div className="bg-primary/10 border border-primary/20 text-primary text-[10px] px-3 py-1.5 rounded-md text-center tracking-wider font-semibold uppercase mb-4">
-            {planLabel} plan
+            Free · all features unlocked
           </div>
         </div>
 
@@ -218,7 +217,7 @@ export default function DashboardScreen({
               {navItems.find(n => n.id === activeTab)?.label}
             </div>
             <div className="text-[11px] text-muted-foreground mt-0.5 truncate">
-              {activeTab === "ai" ? `${SUBTITLES.ai} · ${planLabel} plan` : SUBTITLES[activeTab]}
+              {activeTab === "ai" ? SUBTITLES.ai : SUBTITLES[activeTab]}
             </div>
           </div>
           {activeTab === "ai" && (

@@ -60,7 +60,7 @@ export default function AuthScreen({ mode, setMode, onSubmit, error, locked, cou
           {mode === "login"
             ? "Sign in to pick up right where you left off"
             : mode === "register"
-            ? "Start your 14-day free trial — no card needed"
+            ? "Create your free account — ZENTRIX is completely free"
             : "We'll send a reset link to your email"}
         </p>
 
