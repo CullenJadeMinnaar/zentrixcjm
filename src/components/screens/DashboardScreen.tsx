@@ -1,7 +1,7 @@
 import { RefObject, useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import { motion, AnimatePresence } from "framer-motion";
-import { History, PenSquare } from "lucide-react";
+import { History, PenSquare, Copy, Check } from "lucide-react";
 import ZentrixLogo from "../ZentrixLogo";
 import SettingsTab from "./dashboard/SettingsTab";
 import WellnessTab from "./dashboard/WellnessTab";
@@ -111,6 +111,7 @@ export default function DashboardScreen({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [dueCount, setDueCount] = useState(0);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   useEffect(() => {
     let alive = true;
