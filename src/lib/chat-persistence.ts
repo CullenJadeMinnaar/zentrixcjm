@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 export interface ChatSessionRow {
   id: string;
   title: string;
+  pinned?: boolean;
   summary: string | null;
   created_at: string;
   updated_at: string;
@@ -24,9 +25,10 @@ export function titleFromMessage(text: string): string {
 export async function listSessions(): Promise<ChatSessionRow[]> {
   const { data, error } = await supabase
     .from("chat_sessions")
-    .select("id,title,summary,created_at,updated_at")
+    .select("id,title,summary,pinned,created_at,updated_at")
+    .order("pinned", { ascending: false })
     .order("updated_at", { ascending: false })
-    .limit(50);
+    .limit(100);
   if (error) throw error;
   return (data ?? []) as ChatSessionRow[];
 }
@@ -34,7 +36,7 @@ export async function listSessions(): Promise<ChatSessionRow[]> {
 export async function latestSession(): Promise<ChatSessionRow | null> {
   const { data, error } = await supabase
     .from("chat_sessions")
-    .select("id,title,summary,created_at,updated_at")
+    .select("id,title,summary,pinned,created_at,updated_at")
     .order("updated_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -83,4 +85,54 @@ export async function deleteSession(sessionId: string) {
   await supabase.from("chat_messages").delete().eq("session_id", sessionId);
   const { error } = await supabase.from("chat_sessions").delete().eq("id", sessionId);
   if (error) throw error;
+}
+
+export async function renameSession(sessionId: string, title: string) {
+  const clean = title.trim().slice(0, 120) || "New Chat";
+  const { error } = await (supabase.from("chat_sessions") as any)
+    .update({ title: clean })
+    .eq("id", sessionId);
+  if (error) throw error;
+  return clean;
+}
+
+export async function setSessionPinned(sessionId: string, pinned: boolean) {
+  const { error } = await (supabase.from("chat_sessions") as any)
+    .update({ pinned })
+    .eq("id", sessionId);
+  if (error) throw error;
+}
+
+/** Session ids whose messages contain the given text. */
+export async function searchSessionIdsByContent(query: string): Promise<string[]> {
+  const q = query.trim();
+  if (q.length < 2) return [];
+  const { data, error } = await supabase
+    .from("chat_messages")
+    .select("session_id")
+    .ilike("content", `%${q}%`)
+    .limit(300);
+  if (error) return [];
+  return Array.from(new Set((data ?? []).map((r: any) => r.session_id as string)));
+}
+
+export async function exportSessionMarkdown(session: ChatSessionRow): Promise<string> {
+  const rows = await loadSessionMessages(session.id);
+  const header = `# ${session.title}\n\n_Exported from ZENTRIX on ${new Date().toLocaleString()}_\n`;
+  const body = rows
+    .map((r) => `\n---\n\n**${r.role === "user" ? "You" : "Morpheus"}** · ${new Date(r.created_at).toLocaleString()}\n\n${r.content}\n`)
+    .join("");
+  return header + body;
+}
+
+export function downloadTextFile(filename: string, text: string) {
+  const blob = new Blob([text], { type: "text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
