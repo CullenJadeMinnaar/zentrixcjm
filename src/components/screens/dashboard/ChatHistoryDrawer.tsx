@@ -1,9 +1,18 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
-import { X, Plus, Trash2 } from "lucide-react";
+import { X, Plus, Trash2, Pin, PinOff, Pencil, Download, Check } from "lucide-react";
 import { toast } from "sonner";
-import { listSessions, deleteSession, type ChatSessionRow } from "@/lib/chat-persistence";
+import {
+  listSessions,
+  deleteSession,
+  renameSession,
+  setSessionPinned,
+  searchSessionIdsByContent,
+  exportSessionMarkdown,
+  downloadTextFile,
+  type ChatSessionRow,
+} from "@/lib/chat-persistence";
 
 interface Props {
   open: boolean;
@@ -17,6 +26,9 @@ export default function ChatHistoryDrawer({ open, onClose, activeSessionId, onSe
   const [sessions, setSessions] = useState<ChatSessionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [contentMatches, setContentMatches] = useState<string[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draftTitle, setDraftTitle] = useState("");
 
   useEffect(() => {
     if (!open) return;
@@ -27,7 +39,23 @@ export default function ChatHistoryDrawer({ open, onClose, activeSessionId, onSe
       .finally(() => setLoading(false));
   }, [open]);
 
-  const filtered = sessions.filter((s) => s.title.toLowerCase().includes(search.toLowerCase()));
+  // Search inside message content (debounced)
+  useEffect(() => {
+    const q = search.trim();
+    if (q.length < 2) { setContentMatches([]); return; }
+    const t = window.setTimeout(() => {
+      void searchSessionIdsByContent(q).then(setContentMatches);
+    }, 300);
+    return () => window.clearTimeout(t);
+  }, [search]);
+
+  const q = search.trim().toLowerCase();
+  const filtered = sessions
+    .filter((s) => !q || s.title.toLowerCase().includes(q) || contentMatches.includes(s.id))
+    .sort((a, b) => {
+      if (!!a.pinned !== !!b.pinned) return a.pinned ? -1 : 1;
+      return a.updated_at < b.updated_at ? 1 : -1;
+    });
 
   const remove = async (id: string) => {
     try {
@@ -36,6 +64,40 @@ export default function ChatHistoryDrawer({ open, onClose, activeSessionId, onSe
       if (id === activeSessionId) onNewChat();
     } catch (e: any) {
       toast.error(e?.message ?? "Could not delete conversation");
+    }
+  };
+
+  const togglePin = async (s: ChatSessionRow) => {
+    const next = !s.pinned;
+    setSessions((prev) => prev.map((x) => (x.id === s.id ? { ...x, pinned: next } : x)));
+    try {
+      await setSessionPinned(s.id, next);
+    } catch {
+      setSessions((prev) => prev.map((x) => (x.id === s.id ? { ...x, pinned: !next } : x)));
+      toast.error("Could not update pin");
+    }
+  };
+
+  const commitRename = async (s: ChatSessionRow) => {
+    const title = draftTitle.trim();
+    setEditingId(null);
+    if (!title || title === s.title) return;
+    try {
+      const saved = await renameSession(s.id, title);
+      setSessions((prev) => prev.map((x) => (x.id === s.id ? { ...x, title: saved } : x)));
+    } catch {
+      toast.error("Could not rename conversation");
+    }
+  };
+
+  const exportSession = async (s: ChatSessionRow) => {
+    try {
+      const md = await exportSessionMarkdown(s);
+      const safe = s.title.replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-").slice(0, 40) || "conversation";
+      downloadTextFile(`zentrix-${safe}.md`, md);
+      toast.success("Conversation downloaded");
+    } catch {
+      toast.error("Could not export conversation");
     }
   };
 
@@ -70,7 +132,7 @@ export default function ChatHistoryDrawer({ open, onClose, activeSessionId, onSe
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search conversations…"
+                placeholder="Search titles & messages…"
                 className="w-full bg-secondary/50 border border-border rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
@@ -79,30 +141,77 @@ export default function ChatHistoryDrawer({ open, onClose, activeSessionId, onSe
               {loading ? (
                 <div className="text-center text-muted-foreground text-xs py-8">Loading…</div>
               ) : filtered.length === 0 ? (
-                <div className="text-center text-muted-foreground text-xs py-8">No conversations yet.</div>
+                <div className="text-center text-muted-foreground text-xs py-8">
+                  {q ? "No matching conversations." : "No conversations yet."}
+                </div>
               ) : (
                 filtered.map((s) => (
                   <div
                     key={s.id}
-                    className={`group flex items-center gap-2 rounded-lg px-3 py-2.5 border transition-all cursor-pointer ${
+                    className={`group rounded-lg px-3 py-2.5 border transition-all cursor-pointer ${
                       s.id === activeSessionId
                         ? "bg-primary/10 border-primary/25"
                         : "bg-secondary/30 border-transparent hover:border-border"
                     }`}
-                    onClick={() => { onSelect(s.id); onClose(); }}
+                    onClick={() => { if (editingId !== s.id) { onSelect(s.id); onClose(); } }}
                   >
-                    <div className="min-w-0 flex-1">
-                      <div className="text-xs font-medium truncate">{s.title}</div>
-                      <div className="text-[10px] text-muted-foreground">
-                        {format(new Date(s.updated_at), "MMM d, yyyy · h:mm a")}
+                    <div className="flex items-center gap-2">
+                      <div className="min-w-0 flex-1">
+                        {editingId === s.id ? (
+                          <input
+                            autoFocus
+                            value={draftTitle}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => setDraftTitle(e.target.value)}
+                            onBlur={() => void commitRename(s)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") { e.preventDefault(); void commitRename(s); }
+                              if (e.key === "Escape") setEditingId(null);
+                            }}
+                            className="w-full bg-background border border-border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          />
+                        ) : (
+                          <div className="text-xs font-medium truncate flex items-center gap-1">
+                            {s.pinned && <Pin className="w-3 h-3 text-primary shrink-0" />}
+                            {s.title}
+                          </div>
+                        )}
+                        <div className="text-[10px] text-muted-foreground mt-0.5">
+                          {format(new Date(s.updated_at), "MMM d, yyyy · h:mm a")}
+                        </div>
                       </div>
                     </div>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); void remove(s.id); }}
-                      className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+
+                    <div className="flex items-center gap-1 mt-1.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); void togglePin(s); }}
+                        title={s.pinned ? "Unpin" : "Pin"}
+                        className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary/70"
+                      >
+                        {s.pinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setEditingId(s.id); setDraftTitle(s.title); }}
+                        title="Rename"
+                        className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary/70"
+                      >
+                        {editingId === s.id ? <Check className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); void exportSession(s); }}
+                        title="Export as Markdown"
+                        className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary/70"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); void remove(s.id); }}
+                        title="Delete"
+                        className="ml-auto p-1 rounded text-muted-foreground hover:text-destructive hover:bg-secondary/70"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
