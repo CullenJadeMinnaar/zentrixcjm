@@ -16,6 +16,7 @@ import JournalTab from "./dashboard/JournalTab";
 import GoalsTab from "./dashboard/GoalsTab";
 import CalendarTab from "./dashboard/CalendarTab";
 import ChatComposer from "./dashboard/ChatComposer";
+import MessageList from "./dashboard/MessageList";
 import ChatHistoryDrawer from "./dashboard/ChatHistoryDrawer";
 import { remindersApi } from "@/lib/productivity";
 

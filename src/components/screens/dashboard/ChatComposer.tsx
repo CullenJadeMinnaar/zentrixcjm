@@ -64,6 +64,42 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
     setUploading(false);
   };
 
+  const uploadFiles = async (files: File[]) => {
+    if (!files.length) return;
+    setUploading(true);
+    for (const f of files) {
+      try {
+        const a = await uploadAttachment(f);
+        setAttachments((prev) => [...prev, a]);
+      } catch (err: any) {
+        toast.error(err?.message ?? `Could not upload ${f.name}`);
+      }
+    }
+    setUploading(false);
+  };
+
+  const handlePaste = async (e: ClipboardEvent<HTMLTextAreaElement>) => {
+    const cd = e.clipboardData;
+    if (!cd) return;
+    const images: File[] = Array.from(cd.files ?? []).filter((f) => f.type.startsWith("image/"));
+    if (!images.length) {
+      for (const item of Array.from(cd.items ?? [])) {
+        if (item.kind === "file" && item.type.startsWith("image/")) {
+          const f = item.getAsFile();
+          if (f) images.push(f);
+        }
+      }
+    }
+    if (!images.length) return;
+    e.preventDefault();
+    const stamped = images.map((f, i) =>
+      f.name && f.name !== "image.png"
+        ? f
+        : new File([f], `pasted-${Date.now()}-${i}.${(f.type.split("/")[1] || "png")}`, { type: f.type })
+    );
+    await uploadFiles(stamped);
+  };
+
   const dropAttachment = async (a: Attachment) => {
     setAttachments((prev) => prev.filter((x) => x.id !== a.id));
     try { await removeAttachment(a); } catch { /* ignore */ }
