@@ -1,4 +1,4 @@
-import { useRef, useState, useLayoutEffect, KeyboardEvent, ChangeEvent } from "react";
+import { useRef, useState, useLayoutEffect, KeyboardEvent, ChangeEvent, ClipboardEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Paperclip, Mic, Send, Square, X, Loader2 } from "lucide-react";
@@ -51,6 +51,10 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
   const pickFiles = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
     e.target.value = "";
+    await uploadFiles(files);
+  };
+
+  const uploadFiles = async (files: File[]) => {
     if (!files.length) return;
     setUploading(true);
     for (const f of files) {
@@ -62,6 +66,28 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
       }
     }
     setUploading(false);
+  };
+
+  const handlePaste = async (e: ClipboardEvent<HTMLTextAreaElement>) => {
+    const cd = e.clipboardData;
+    if (!cd) return;
+    const images: File[] = Array.from(cd.files ?? []).filter((f) => f.type.startsWith("image/"));
+    if (!images.length) {
+      for (const item of Array.from(cd.items ?? [])) {
+        if (item.kind === "file" && item.type.startsWith("image/")) {
+          const f = item.getAsFile();
+          if (f) images.push(f);
+        }
+      }
+    }
+    if (!images.length) return;
+    e.preventDefault();
+    const stamped = images.map((f, i) =>
+      f.name && f.name !== "image.png"
+        ? f
+        : new File([f], `pasted-${Date.now()}-${i}.${(f.type.split("/")[1] || "png")}`, { type: f.type })
+    );
+    await uploadFiles(stamped);
   };
 
   const dropAttachment = async (a: Attachment) => {
@@ -144,6 +170,7 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKey}
+            onPaste={handlePaste}
             placeholder="Message Morpheus…"
             maxLength={MAX_INPUT_LENGTH}
             rows={1}
