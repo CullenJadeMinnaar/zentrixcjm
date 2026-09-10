@@ -1,4 +1,4 @@
-import { useRef, useState, useLayoutEffect, KeyboardEvent, ChangeEvent } from "react";
+import { useRef, useState, useLayoutEffect, KeyboardEvent, ChangeEvent, ClipboardEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Paperclip, Mic, Send, Square, X, Loader2 } from "lucide-react";
@@ -51,17 +51,7 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
   const pickFiles = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
     e.target.value = "";
-    if (!files.length) return;
-    setUploading(true);
-    for (const f of files) {
-      try {
-        const a = await uploadAttachment(f);
-        setAttachments((prev) => [...prev, a]);
-      } catch (err: any) {
-        toast.error(err?.message ?? `Could not upload ${f.name}`);
-      }
-    }
-    setUploading(false);
+    await uploadFiles(files);
   };
 
   const uploadFiles = async (files: File[]) => {
@@ -180,6 +170,7 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKey}
+            onPaste={handlePaste}
             placeholder="Message Morpheus…"
             maxLength={MAX_INPUT_LENGTH}
             rows={1}
