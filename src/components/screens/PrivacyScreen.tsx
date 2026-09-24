@@ -7,7 +7,7 @@ interface PrivacyScreenProps {
 }
 
 const sections = [
-  { title: "1. Who we are", body: `${COMPANY_INFO.legalName} is a private company registered in ${COMPANY_INFO.country}. Co-CEOs: ${COMPANY_INFO.coCeos}. Contact: ${COMPANY_INFO.privacyEmail}. We operate an AI-powered SaaS platform for personal and SME intelligence.` },
+  { title: "1. Who we are", body: `${COMPANY_INFO.legalName} is a private company registered in ${COMPANY_INFO.country}. Founder & CEO: ${COMPANY_INFO.coCeos}. Contact: ${COMPANY_INFO.privacyEmail}. We operate an AI-powered SaaS platform for personal and SME intelligence.` },
   { title: "2. What data we collect", body: "We collect: your email address, name, and usage data (chat logs, feature usage). We do not collect biometric data, government IDs, or financial details beyond what Stripe processes." },
   { title: "3. How we use your data", body: "To provide and improve our services, personalise your AI experience, send essential service communications, process payments, and comply with legal obligations." },
   { title: "4. Data sharing", body: "We share data with: Anthropic (AI processing, under DPA), Stripe/PayFast (payments), hosting providers (encrypted at rest). We never sell your data to advertisers or data brokers." },
