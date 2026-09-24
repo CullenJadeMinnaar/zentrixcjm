@@ -1,0 +1,7 @@
+- [x] Live mic transcription in composer
+- [x] ElevenLabs voice replies (function)
+- [x] Listen/pause/stop on replies
+- [x] Voice settings (auto-play, voice, speed)
+- [ ] Connect ElevenLabs account (waits on user)
+- [ ] Accessibility: keyboard, focus rings, labels, live announcements
+- [ ] Test recording/playback/settings desktop + mobile
