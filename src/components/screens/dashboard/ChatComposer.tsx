@@ -31,6 +31,9 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
     el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
   }, [input]);
 
+  const recognitionRef = useRef<any>(null);
+  const baseInputRef = useRef("");
+  const [interim, setInterim] = useState("");
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
@@ -45,6 +48,8 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
   };
 
   const handleKey = (e: KeyboardEvent) => {
+    if (e.key.toLowerCase() === "m" && e.ctrlKey && e.shiftKey) { e.preventDefault(); recording ? stopRec() : startVoice(); return; }
+    if (e.key === "Escape" && recording) { e.preventDefault(); stopRec(); return; }
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); }
   };
 
@@ -138,7 +143,40 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
     }
   };
 
-  const stopRec = () => { recorderRef.current?.stop(); setRecording(false); };
+  const SR: any = typeof window !== "undefined" ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition : null;
+
+  const startLive = () => {
+    const rec = new SR();
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.lang = navigator.language || "en-US";
+    baseInputRef.current = input ? `${input.trimEnd()} ` : "";
+    let finalText = "";
+    rec.onresult = (e: any) => {
+      let live = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const r = e.results[i];
+        if (r.isFinal) finalText += r[0].transcript;
+        else live += r[0].transcript;
+      }
+      setInterim(live);
+      setInput(`${baseInputRef.current}${finalText}${live}`.slice(0, MAX_INPUT_LENGTH));
+    };
+    rec.onerror = (e: any) => {
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") toast.error("Microphone access denied");
+      else if (e.error !== "no-speech" && e.error !== "aborted") toast.error(`Voice input error: ${e.error}`);
+    };
+    rec.onend = () => { setRecording(false); setInterim(""); recognitionRef.current = null; };
+    try { rec.start(); recognitionRef.current = rec; setRecording(true); }
+    catch { toast.error("Could not start voice input"); }
+  };
+
+  const startVoice = () => (SR ? startLive() : startRec());
+  const stopRec = () => {
+    if (recognitionRef.current) recognitionRef.current.stop();
+    else recorderRef.current?.stop();
+    setRecording(false);
+  };
 
   return (
     <div className="px-4 sm:px-6 pb-4 pt-3 bg-background/40 backdrop-blur-sm">
@@ -165,6 +203,15 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
             )}
           </AnimatePresence>
 
+          {recording && (
+            <div className="flex items-center gap-2 px-4 pt-3 text-[11px] text-destructive">
+              <span className="relative flex w-2 h-2">
+                <span className="absolute inline-flex w-full h-full rounded-full bg-destructive opacity-75 animate-ping" />
+                <span className="relative inline-flex w-2 h-2 rounded-full bg-destructive" />
+              </span>
+              Listening — speak now, tap the square to stop
+            </div>
+          )}
           <textarea
             ref={taRef}
             value={input}
@@ -172,6 +219,7 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
             onKeyDown={handleKey}
             onPaste={handlePaste}
             placeholder="Message Morpheus…"
+            aria-label="Message Morpheus"
             maxLength={MAX_INPUT_LENGTH}
             rows={1}
             className="w-full bg-transparent px-4 pt-3.5 pb-1 text-sm leading-6 text-foreground placeholder:text-muted-foreground/70 resize-none focus:outline-none max-h-[200px] overflow-y-auto"
@@ -184,15 +232,19 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
               title="Attach images or documents"
-              className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors disabled:opacity-40"
+              aria-label="Attach images or documents"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors disabled:opacity-40"
             >
               {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
             </button>
             <button
-              onClick={recording ? stopRec : startRec}
+              onClick={recording ? stopRec : startVoice}
               disabled={transcribing}
-              title={recording ? "Stop recording" : "Record voice"}
-              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors disabled:opacity-40 ${
+              title={recording ? "Stop recording (Ctrl+Shift+M)" : "Record voice (Ctrl+Shift+M)"}
+              aria-label={recording ? "Stop voice input" : "Start voice input"}
+              aria-pressed={recording}
+              aria-keyshortcuts="Control+Shift+M"
+              className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background w-9 h-9 rounded-lg flex items-center justify-center transition-colors disabled:opacity-40 ${
                 recording ? "bg-destructive/15 text-destructive animate-pulse" : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
               }`}
             >
@@ -200,21 +252,25 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
             </button>
 
             <span className="ml-auto text-[10px] text-muted-foreground/50 mr-1 hidden sm:block">
-              {recording ? "Recording…" : transcribing ? "Transcribing…" : `${input.length}/${MAX_INPUT_LENGTH}`}
+              {recording ? (interim ? "Listening… (live)" : "Listening…") : transcribing ? "Transcribing…" : `${input.length}/${MAX_INPUT_LENGTH}`}
             </span>
 
             <motion.button
               whileTap={{ scale: 0.94 }}
               onClick={submit}
+              aria-label="Send message"
               disabled={busy || (!input.trim() && attachments.length === 0)}
-              className="w-9 h-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:brightness-110 transition-all disabled:opacity-40"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background w-9 h-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:brightness-110 transition-all disabled:opacity-40"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </motion.button>
           </div>
         </div>
-        <div className="text-[10px] text-muted-foreground/40 mt-1.5 text-center">
-          Enter to send · Shift+Enter for a new line
+        <div className="sr-only" role="status" aria-live="polite">
+          {recording ? "Voice input on. Listening." : transcribing ? "Transcribing your recording." : ""}
+        </div>
+        <div className="text-[10px] text-muted-foreground mt-1.5 text-center">
+          Enter to send · Shift+Enter new line · Ctrl+Shift+M voice · Esc stop
         </div>
       </div>
     </div>
