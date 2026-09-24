@@ -1,7 +1,9 @@
-import { RefObject, memo, useState } from "react";
+import { RefObject, memo, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import { getAudioSettings, playMessage, stopPlayback, subscribePlayer, type PlayState } from "@/lib/voice";
 import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, Volume2, Pause, Loader2, Square } from "lucide-react";
 import ZentrixLogo from "../../ZentrixLogo";
 
 export interface Message {
@@ -17,6 +19,24 @@ interface Props {
 
 function MessageList({ messages, loading, chatEndRef }: Props) {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [player, setPlayer] = useState<{ id: string | null; state: PlayState }>({ id: null, state: "idle" });
+  useEffect(() => subscribePlayer((id, state) => setPlayer({ id, state })), []);
+
+  const listen = (i: number, text: string) => {
+    playMessage(`m${i}`, text).catch((e) => toast.error(e?.message ?? "Voice playback failed"));
+  };
+
+  // Auto-play the newest reply once streaming finishes
+  const wasLoading = useRef(loading);
+  useEffect(() => {
+    if (wasLoading.current && !loading) {
+      const last = messages[messages.length - 1];
+      if (last?.role === "assistant" && last.content.trim() && getAudioSettings().autoPlay) {
+        listen(messages.length - 1, last.content);
+      }
+    }
+    wasLoading.current = loading;
+  }, [loading, messages]);
 
   return (
     <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
@@ -52,6 +72,35 @@ function MessageList({ messages, loading, chatEndRef }: Props) {
                     msg.content
                   )}
                 </div>
+                {msg.role === "assistant" && msg.content.trim() && (() => {
+                  const active = player.id === `m${i}`;
+                  const st = active ? player.state : "idle";
+                  return (
+                    <div className="flex items-center gap-1 mt-1.5 text-[11px] text-muted-foreground">
+                      <button
+                        onClick={() => listen(i, msg.content)}
+                        disabled={st === "loading"}
+                        aria-label={st === "playing" ? "Pause" : "Listen"}
+                        className="flex items-center gap-1 px-2 py-1 rounded-md hover:bg-secondary/60 hover:text-foreground transition-colors disabled:opacity-60"
+                      >
+                        {st === "loading" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : st === "playing" ? <Pause className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                        <span>{st === "loading" ? "Preparing voice…" : st === "playing" ? "Pause" : st === "paused" ? "Resume" : "Listen"}</span>
+                      </button>
+                      {active && st !== "loading" && (
+                        <button onClick={stopPlayback} aria-label="Stop" className="p-1 rounded-md hover:bg-secondary/60 hover:text-foreground">
+                          <Square className="w-3 h-3" />
+                        </button>
+                      )}
+                      {st === "playing" && (
+                        <span className="flex items-end gap-0.5 h-3 ml-1" aria-hidden>
+                          {[0, 0.15, 0.3].map((d) => (
+                            <span key={d} className="w-0.5 h-full bg-primary rounded-full animate-pulse" style={{ animationDelay: `${d}s` }} />
+                          ))}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
                 <button
                   onClick={async () => {
                     try {
