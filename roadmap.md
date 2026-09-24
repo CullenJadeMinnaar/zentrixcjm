@@ -3,5 +3,7 @@
 - [x] Listen/pause/stop on replies
 - [x] Voice settings (auto-play, voice, speed)
 - [ ] Connect ElevenLabs account (waits on user)
-- [ ] Accessibility: keyboard, focus rings, labels, live announcements
+- [x] Accessibility: keyboard, focus rings, labels, live announcements
 - [ ] Test recording/playback/settings desktop + mobile
+- [x] Single founder: Cullen Jade Minnaar only
+- [ ] Modern, less generic redesign (waits on style picks)

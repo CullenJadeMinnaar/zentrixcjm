@@ -185,32 +185,23 @@ export default function LandingScreen({ onAuth, onPrivacy }: LandingScreenProps)
               THE VISIONARIES
             </div>
             <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">
-              Built by{" "}
-              <span className="text-gradient-warm">leaders.</span>
+              Built by a{" "}
+              <span className="text-gradient-warm">visionary.</span>
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              ZENTRIX was forged by two minds determined to change how humans interact with AI.
+              ZENTRIX was founded by one mind determined to change how humans interact with AI.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="max-w-xl mx-auto">
             <FounderCard
               name="Cullen Jade Minnaar"
-              title="CEO · THE HEAD HONCHO"
-              subtitle="The Big Boss · Chief Executive Officer"
+              title="FOUNDER & CEO"
+              subtitle="Founder · Chief Executive Officer"
               initials="CJM"
               accentColor="primary"
               delay={0.2}
-              bio="The visionary architect behind ZENTRIX. Cullen doesn't just lead — he commands the future. As CEO and Head Honcho, he drives every bold decision, every breakthrough feature, and every pixel of this platform. When Cullen speaks, the industry listens. The big boss energy is real."
-            />
-            <FounderCard
-              name="Mervin Geswind"
-              title="CO-FOUNDER · 2ND IN COMMAND"
-              subtitle="The Powerhouse · Co-Founder"
-              initials="MG"
-              accentColor="accent"
-              delay={0.4}
-              bio="The strategic force that turns vision into reality. Mervin is the engine room of ZENTRIX — relentless, sharp, and always two steps ahead. As Co-Founder and 2nd in Command, he ensures every system runs flawlessly and every user experience hits perfection. The right hand that moves mountains."
+              bio="The visionary architect behind ZENTRIX. Cullen founded the company and drives every bold decision, every breakthrough feature, and every pixel of this platform."
             />
           </div>
         </section>

@@ -4,7 +4,7 @@ export const COMPANY_INFO = {
   name: "ZENTRIX",
   legalName: "ZENTRIX (Pty) Ltd",
   country: "South Africa",
-  coCeos: "Cullen Minnaar & Mervin Geswind",
+  coCeos: "Cullen Jade Minnaar",
   privacyEmail: "privacy@zentrix.ai",
   securityEmail: "security@zentrix.ai",
   year: 2026,
