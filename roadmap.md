@@ -5,3 +5,5 @@
 - [ ] Connect ElevenLabs account (waits on user)
 - [ ] Accessibility: keyboard, focus rings, labels, live announcements
 - [ ] Test recording/playback/settings desktop + mobile
+- [ ] Single founder: Cullen Jade Minnaar only
+- [ ] Modern, less generic redesign (waits on style picks)
