@@ -9,6 +9,7 @@ import {
   stopNotificationLoop,
 } from "@/lib/notifications";
 import { toast } from "sonner";
+import { VOICES, getAudioSettings, saveAudioSettings, playMessage, type AudioSettings } from "@/lib/voice";
 
 const DIGEST_PREF_KEY = "zentrix_daily_digest_enabled";
 
@@ -39,6 +40,13 @@ export default function SettingsTab({ user, onLogout }: SettingsTabProps) {
   const [darkMode, setDarkMode] = useState(true);
   const [dailyQuotes, setDailyQuotes] = useState(true);
   const [moodReminders, setMoodReminders] = useState(true);
+
+  const [audio, setAudio] = useState<AudioSettings>(getAudioSettings);
+  const updateAudio = (patch: Partial<AudioSettings>) => {
+    const next = { ...audio, ...patch };
+    setAudio(next);
+    saveAudioSettings(next);
+  };
 
   useEffect(() => {
     applyTheme(selectedTheme);
@@ -155,6 +163,56 @@ export default function SettingsTab({ user, onLogout }: SettingsTabProps) {
             >
               <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${dailyDigest ? "left-[26px]" : "left-0.5"}`} />
             </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Voice & Audio */}
+      <section className="mb-8">
+        <h3 className="text-[11px] font-semibold mb-3 text-muted-foreground uppercase tracking-[3px]">Voice & Audio</h3>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between bg-card/60 border border-border rounded-xl p-4">
+            <div>
+              <div className="text-sm font-medium">Auto-play responses</div>
+              <div className="text-[11px] text-muted-foreground mt-0.5">Morpheus reads each new reply aloud</div>
+            </div>
+            <button
+              onClick={() => updateAudio({ autoPlay: !audio.autoPlay })}
+              aria-label="Toggle auto-play"
+              className={`w-12 h-6 rounded-full relative transition-all ${audio.autoPlay ? "bg-primary" : "bg-secondary border border-border"}`}
+            >
+              <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${audio.autoPlay ? "left-[26px]" : "left-0.5"}`} />
+            </button>
+          </div>
+          <div className="bg-card/60 border border-border rounded-xl p-4">
+            <div className="text-sm font-medium mb-2">Voice</div>
+            <div className="flex gap-2">
+              <select
+                value={audio.voiceId}
+                onChange={(e) => updateAudio({ voiceId: e.target.value })}
+                className="flex-1 bg-secondary/60 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              >
+                {VOICES.map((v) => <option key={v.id} value={v.id}>{v.label}</option>)}
+              </select>
+              <button
+                onClick={() => playMessage(`preview-${audio.voiceId}-${audio.speed}`, "Hello. I'm Morpheus. I'm here whenever you need me.").catch((e) => toast.error(e?.message ?? "Preview failed"))}
+                className="shrink-0 text-xs bg-primary text-primary-foreground rounded-lg px-3 py-2 font-semibold hover:brightness-110"
+              >
+                Preview
+              </button>
+            </div>
+          </div>
+          <div className="bg-card/60 border border-border rounded-xl p-4">
+            <div className="flex justify-between text-sm font-medium mb-2">
+              <span>Speaking speed</span>
+              <span className="text-muted-foreground">{audio.speed.toFixed(2)}×</span>
+            </div>
+            <input
+              type="range" min={0.7} max={1.2} step={0.05}
+              value={audio.speed}
+              onChange={(e) => updateAudio({ speed: Number(e.target.value) })}
+              className="w-full accent-primary"
+            />
           </div>
         </div>
       </section>

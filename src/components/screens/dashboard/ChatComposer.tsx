@@ -31,6 +31,9 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
     el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
   }, [input]);
 
+  const recognitionRef = useRef<any>(null);
+  const baseInputRef = useRef("");
+  const [interim, setInterim] = useState("");
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
@@ -138,7 +141,40 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
     }
   };
 
-  const stopRec = () => { recorderRef.current?.stop(); setRecording(false); };
+  const SR: any = typeof window !== "undefined" ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition : null;
+
+  const startLive = () => {
+    const rec = new SR();
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.lang = navigator.language || "en-US";
+    baseInputRef.current = input ? `${input.trimEnd()} ` : "";
+    let finalText = "";
+    rec.onresult = (e: any) => {
+      let live = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const r = e.results[i];
+        if (r.isFinal) finalText += r[0].transcript;
+        else live += r[0].transcript;
+      }
+      setInterim(live);
+      setInput(`${baseInputRef.current}${finalText}${live}`.slice(0, MAX_INPUT_LENGTH));
+    };
+    rec.onerror = (e: any) => {
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") toast.error("Microphone access denied");
+      else if (e.error !== "no-speech" && e.error !== "aborted") toast.error(`Voice input error: ${e.error}`);
+    };
+    rec.onend = () => { setRecording(false); setInterim(""); recognitionRef.current = null; };
+    try { rec.start(); recognitionRef.current = rec; setRecording(true); }
+    catch { toast.error("Could not start voice input"); }
+  };
+
+  const startVoice = () => (SR ? startLive() : startRec());
+  const stopRec = () => {
+    if (recognitionRef.current) recognitionRef.current.stop();
+    else recorderRef.current?.stop();
+    setRecording(false);
+  };
 
   return (
     <div className="px-4 sm:px-6 pb-4 pt-3 bg-background/40 backdrop-blur-sm">
@@ -165,6 +201,15 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
             )}
           </AnimatePresence>
 
+          {recording && (
+            <div className="flex items-center gap-2 px-4 pt-3 text-[11px] text-destructive">
+              <span className="relative flex w-2 h-2">
+                <span className="absolute inline-flex w-full h-full rounded-full bg-destructive opacity-75 animate-ping" />
+                <span className="relative inline-flex w-2 h-2 rounded-full bg-destructive" />
+              </span>
+              Listening — speak now, tap the square to stop
+            </div>
+          )}
           <textarea
             ref={taRef}
             value={input}
@@ -189,7 +234,7 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
               {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
             </button>
             <button
-              onClick={recording ? stopRec : startRec}
+              onClick={recording ? stopRec : startVoice}
               disabled={transcribing}
               title={recording ? "Stop recording" : "Record voice"}
               className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors disabled:opacity-40 ${
@@ -200,7 +245,7 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
             </button>
 
             <span className="ml-auto text-[10px] text-muted-foreground/50 mr-1 hidden sm:block">
-              {recording ? "Recording…" : transcribing ? "Transcribing…" : `${input.length}/${MAX_INPUT_LENGTH}`}
+              {recording ? (interim ? "Listening… (live)" : "Listening…") : transcribing ? "Transcribing…" : `${input.length}/${MAX_INPUT_LENGTH}`}
             </span>
 
             <motion.button
