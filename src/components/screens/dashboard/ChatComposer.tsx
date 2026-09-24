@@ -48,6 +48,8 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
   };
 
   const handleKey = (e: KeyboardEvent) => {
+    if (e.key.toLowerCase() === "m" && e.ctrlKey && e.shiftKey) { e.preventDefault(); recording ? stopRec() : startVoice(); return; }
+    if (e.key === "Escape" && recording) { e.preventDefault(); stopRec(); return; }
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); }
   };
 
@@ -217,6 +219,7 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
             onKeyDown={handleKey}
             onPaste={handlePaste}
             placeholder="Message Morpheus…"
+            aria-label="Message Morpheus"
             maxLength={MAX_INPUT_LENGTH}
             rows={1}
             className="w-full bg-transparent px-4 pt-3.5 pb-1 text-sm leading-6 text-foreground placeholder:text-muted-foreground/70 resize-none focus:outline-none max-h-[200px] overflow-y-auto"
@@ -229,15 +232,19 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
               title="Attach images or documents"
-              className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors disabled:opacity-40"
+              aria-label="Attach images or documents"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors disabled:opacity-40"
             >
               {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
             </button>
             <button
               onClick={recording ? stopRec : startVoice}
               disabled={transcribing}
-              title={recording ? "Stop recording" : "Record voice"}
-              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors disabled:opacity-40 ${
+              title={recording ? "Stop recording (Ctrl+Shift+M)" : "Record voice (Ctrl+Shift+M)"}
+              aria-label={recording ? "Stop voice input" : "Start voice input"}
+              aria-pressed={recording}
+              aria-keyshortcuts="Control+Shift+M"
+              className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background w-9 h-9 rounded-lg flex items-center justify-center transition-colors disabled:opacity-40 ${
                 recording ? "bg-destructive/15 text-destructive animate-pulse" : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
               }`}
             >
@@ -251,15 +258,19 @@ export default function ChatComposer({ input, setInput, onSend, loading }: Props
             <motion.button
               whileTap={{ scale: 0.94 }}
               onClick={submit}
+              aria-label="Send message"
               disabled={busy || (!input.trim() && attachments.length === 0)}
-              className="w-9 h-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:brightness-110 transition-all disabled:opacity-40"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background w-9 h-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:brightness-110 transition-all disabled:opacity-40"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </motion.button>
           </div>
         </div>
-        <div className="text-[10px] text-muted-foreground/40 mt-1.5 text-center">
-          Enter to send · Shift+Enter for a new line
+        <div className="sr-only" role="status" aria-live="polite">
+          {recording ? "Voice input on. Listening." : transcribing ? "Transcribing your recording." : ""}
+        </div>
+        <div className="text-[10px] text-muted-foreground mt-1.5 text-center">
+          Enter to send · Shift+Enter new line · Ctrl+Shift+M voice · Esc stop
         </div>
       </div>
     </div>

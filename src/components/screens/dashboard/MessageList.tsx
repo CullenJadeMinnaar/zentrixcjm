@@ -80,14 +80,15 @@ function MessageList({ messages, loading, chatEndRef }: Props) {
                       <button
                         onClick={() => listen(i, msg.content)}
                         disabled={st === "loading"}
-                        aria-label={st === "playing" ? "Pause" : "Listen"}
-                        className="flex items-center gap-1 px-2 py-1 rounded-md hover:bg-secondary/60 hover:text-foreground transition-colors disabled:opacity-60"
+                        aria-label={st === "playing" ? "Pause reading" : st === "paused" ? "Resume reading" : "Read reply aloud"}
+                        aria-pressed={st === "playing"}
+                        className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background flex items-center gap-1 px-2 py-1 rounded-md hover:bg-secondary/60 hover:text-foreground transition-colors disabled:opacity-60"
                       >
                         {st === "loading" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : st === "playing" ? <Pause className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
                         <span>{st === "loading" ? "Preparing voice…" : st === "playing" ? "Pause" : st === "paused" ? "Resume" : "Listen"}</span>
                       </button>
                       {active && st !== "loading" && (
-                        <button onClick={stopPlayback} aria-label="Stop" className="p-1 rounded-md hover:bg-secondary/60 hover:text-foreground">
+                        <button onClick={stopPlayback} aria-label="Stop and reset reading" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background p-1 rounded-md hover:bg-secondary/60 hover:text-foreground">
                           <Square className="w-3 h-3" />
                         </button>
                       )}
@@ -139,6 +140,9 @@ function MessageList({ messages, loading, chatEndRef }: Props) {
             </div>
           </div>
         )}
+        <div className="sr-only" role="status" aria-live="polite">
+          {player.state === "loading" ? "Preparing voice." : player.state === "playing" ? "Reading reply aloud." : player.state === "paused" ? "Reading paused." : ""}
+        </div>
         <div ref={chatEndRef} />
       </div>
     </div>
