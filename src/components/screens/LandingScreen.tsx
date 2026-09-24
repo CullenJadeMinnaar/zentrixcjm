@@ -185,8 +185,8 @@ export default function LandingScreen({ onAuth, onPrivacy }: LandingScreenProps)
               THE VISIONARIES
             </div>
             <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">
-              Built by{" "}
-              <span className="text-gradient-warm">leaders.</span>
+              Built by a{" "}
+              <span className="text-gradient-warm">visionary.</span>
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
               ZENTRIX was founded by one mind determined to change how humans interact with AI.
